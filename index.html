@@ -1,0 +1,868 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Pengajuan Izin Santri - Ponpes Imam Syafi'i Brebes</title>
+  
+  <!-- PWA Meta Tags -->
+  <link rel="manifest" href="./manifest.json">
+  <meta name="theme-color" content="#064e3b">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Izin Santri">
+  <link rel="apple-touch-icon" href="./icon.svg">
+  <link rel="icon" type="image/svg+xml" href="./icon.svg">
+
+  <!-- Bootstrap 5 & Icons -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+  <!-- Google Fonts: Plus Jakarta Sans -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Amiri:wght@400;700&display=swap" rel="stylesheet">
+
+  <style>
+    :root {
+      --primary: #064e3b;
+      --primary-dark: #022c22;
+      --primary-light: #059669;
+      --accent: #f59e0b;
+      --bg-surface: #f8fafc;
+      --card-bg: #ffffff;
+      --text-main: #0f172a;
+      --text-muted: #64748b;
+      --border-color: #e2e8f0;
+      --radius-lg: 18px;
+      --radius-md: 12px;
+    }
+
+    body {
+      font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+      background-color: var(--bg-surface);
+      color: var(--text-main);
+      padding-bottom: 70px;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .font-arabic {
+      font-family: 'Amiri', serif;
+    }
+
+    /* Header Banner */
+    .hero-header {
+      background: linear-gradient(145deg, var(--primary-dark), var(--primary), var(--primary-light));
+      color: #ffffff;
+      padding: 30px 20px 42px 20px;
+      border-bottom-left-radius: 28px;
+      border-bottom-right-radius: 28px;
+      position: relative;
+      overflow: hidden;
+      box-shadow: 0 10px 25px -5px rgba(6, 78, 59, 0.35);
+    }
+
+    .hero-header::after {
+      content: "";
+      position: absolute;
+      top: -30%;
+      right: -15%;
+      width: 260px;
+      height: 260px;
+      background: radial-gradient(circle, rgba(245, 158, 11, 0.22) 0%, rgba(255,255,255,0) 70%);
+      border-radius: 50%;
+      pointer-events: none;
+    }
+
+    /* Floating Pill / Tabs */
+    .nav-tabs-pill-wrapper {
+      margin-top: -24px;
+      padding: 0 16px;
+      position: relative;
+      z-index: 10;
+    }
+
+    .nav-tabs-custom {
+      background: #ffffff;
+      padding: 6px;
+      border-radius: 100px;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+      display: flex;
+      border: 1px solid rgba(0,0,0,0.04);
+    }
+
+    .nav-tabs-custom .nav-link {
+      flex: 1;
+      text-align: center;
+      border-radius: 100px;
+      border: none;
+      font-size: 0.88rem;
+      font-weight: 700;
+      color: var(--text-muted);
+      padding: 10px 16px;
+      transition: all 0.25s ease;
+      cursor: pointer;
+    }
+
+    .nav-tabs-custom .nav-link.active {
+      background: var(--primary);
+      color: #ffffff !important;
+      box-shadow: 0 4px 12px rgba(6, 78, 59, 0.25);
+    }
+
+    /* Cards */
+    .app-card {
+      background: var(--card-bg);
+      border-radius: var(--radius-lg);
+      border: 1px solid var(--border-color);
+      box-shadow: 0 2px 12px rgba(0, 0, 0, 0.03);
+      padding: 22px;
+      margin-bottom: 20px;
+    }
+
+    .form-label {
+      font-size: 0.84rem;
+      font-weight: 700;
+      color: #1e293b;
+      margin-bottom: 6px;
+    }
+
+    .form-control, .form-select {
+      border-radius: var(--radius-md);
+      border: 1.5px solid #cbd5e1;
+      padding: 11px 14px;
+      font-size: 0.92rem;
+      font-weight: 500;
+      transition: all 0.2s ease;
+    }
+
+    .form-control:focus, .form-select:focus {
+      border-color: var(--primary-light);
+      box-shadow: 0 0 0 4px rgba(5, 150, 105, 0.15);
+    }
+
+    .btn-submit {
+      background: linear-gradient(135deg, var(--primary), var(--primary-light));
+      color: #ffffff;
+      font-weight: 800;
+      border-radius: 100px;
+      padding: 13px 24px;
+      border: none;
+      width: 100%;
+      font-size: 1rem;
+      box-shadow: 0 8px 18px -4px rgba(6, 78, 59, 0.4);
+      transition: transform 0.15s ease, box-shadow 0.15s ease;
+    }
+
+    .btn-submit:hover {
+      background: linear-gradient(135deg, var(--primary-dark), var(--primary));
+      color: #ffffff;
+    }
+
+    .btn-submit:active {
+      transform: scale(0.98);
+    }
+
+    /* Autocomplete list */
+    .autocomplete-list {
+      position: absolute;
+      top: calc(100% + 4px);
+      left: 0;
+      right: 0;
+      background: #ffffff;
+      border-radius: var(--radius-md);
+      box-shadow: 0 10px 25px rgba(0,0,0,0.12);
+      border: 1px solid var(--border-color);
+      max-height: 250px;
+      overflow-y: auto;
+      z-index: 1050;
+      display: none;
+    }
+
+    .autocomplete-item {
+      padding: 10px 14px;
+      border-bottom: 1px solid #f1f5f9;
+      cursor: pointer;
+      transition: background 0.15s ease;
+    }
+
+    .autocomplete-item:hover, .autocomplete-item.active {
+      background-color: #ecfdf5;
+    }
+
+    .badge-status {
+      font-size: 0.78rem;
+      font-weight: 700;
+      padding: 6px 12px;
+      border-radius: 100px;
+    }
+
+    /* Install PWA bar */
+    .install-banner {
+      background: #ffffff;
+      border: 1px solid #d1fae5;
+      border-radius: var(--radius-md);
+      box-shadow: 0 4px 15px rgba(16, 185, 129, 0.08);
+      padding: 12px 16px;
+      display: none;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- HERO HEADER -->
+  <header class="hero-header">
+    <div class="container" style="max-width: 580px;">
+      <div class="d-flex align-items-center justify-content-between mb-2">
+        <div class="d-flex align-items-center gap-2">
+          <img src="./icon.svg" alt="Logo" width="40" height="40" class="rounded-circle shadow-sm" style="border: 2px solid rgba(255,255,255,0.3);">
+          <div>
+            <div class="small fw-semibold text-warning" style="font-size: 11px; letter-spacing: 0.5px;">PORTAL KESANTRIAN</div>
+            <div class="fw-bold" style="font-size: 1.05rem; line-height: 1.2;">PP Imam Syafi'i Brebes</div>
+          </div>
+        </div>
+        <span class="badge bg-warning text-dark fw-bold px-2 py-1 rounded-pill" style="font-size: 10px;">
+          <i class="bi bi-shield-check me-1"></i>PWA RESMI
+        </span>
+      </div>
+
+      <div class="mt-3">
+        <div class="font-arabic fs-5 mb-1 text-white-50">بِسْمِ اللَّهِ الرَّحْمَنِ الرَّحِيم</div>
+        <h1 class="fs-4 fw-extrabold mb-1">Permohonan Izin Santri</h1>
+        <p class="small text-white-50 mb-0" style="font-size: 12.5px;">
+          Layanan mandiri bagi wali santri untuk pengajuan izin pulang / menginap / keluar area pondok.
+        </p>
+      </div>
+    </div>
+  </header>
+
+  <!-- FLOATING TABS -->
+  <div class="container nav-tabs-pill-wrapper" style="max-width: 580px;">
+    <!-- Install PWA Notification Prompt -->
+    <div id="pwa-install-box" class="install-banner">
+      <div class="d-flex align-items-center gap-2">
+        <i class="bi bi-phone-arrow-down text-success fs-4"></i>
+        <div style="line-height: 1.2;">
+          <strong style="font-size: 13px;">Pasang Aplikasi Izin</strong>
+          <div class="text-muted" style="font-size: 11px;">Akses cepat di layar beranda HP Anda</div>
+        </div>
+      </div>
+      <button class="btn btn-sm btn-success rounded-pill px-3 fw-bold" id="btn-pwa-install" onclick="triggerPwaInstall()">
+        Pasang
+      </button>
+    </div>
+
+    <!-- TABS -->
+    <div class="nav-tabs-custom">
+      <button class="nav-link active" id="tab-btn-ajukan" onclick="switchTab('ajukan')">
+        <i class="bi bi-file-earmark-plus me-1"></i> Ajukan Izin
+      </button>
+      <button class="nav-link" id="tab-btn-status" onclick="switchTab('status')">
+        <i class="bi bi-search me-1"></i> Cek Status
+      </button>
+    </div>
+  </div>
+
+  <!-- MAIN CONTAINER -->
+  <main class="container mt-4" style="max-width: 580px;">
+
+    <!-- ============================================== -->
+    <!-- TAB 1: FORM AJUKAN IZIN -->
+    <!-- ============================================== -->
+    <div id="pane-ajukan">
+      <div class="app-card">
+        <form id="form-pengajuan-wali" onsubmit="event.preventDefault(); submitIzinWali();">
+          
+          <!-- 1. PENCARIAN SANTRI -->
+          <div class="mb-3 position-relative">
+            <label class="form-label" for="input-santri-search">
+              <i class="bi bi-person-fill text-success me-1"></i> Nama Santri / NIS <span class="text-danger">*</span>
+            </label>
+            <div class="input-group">
+              <span class="input-group-text bg-light"><i class="bi bi-search text-muted"></i></span>
+              <input type="text" class="form-control" id="input-santri-search" placeholder="Ketik minimal 2 huruf nama santri / NIS..." autocomplete="off" required oninput="onSearchSantri(this.value)">
+            </div>
+            <!-- Suggestion List -->
+            <div id="santri-suggestions" class="autocomplete-list"></div>
+            <input type="hidden" id="selected-santri-nis" required>
+            <input type="hidden" id="selected-santri-nama" required>
+            <div class="text-muted small mt-1" style="font-size: 11px;">
+              <i class="bi bi-info-circle me-1 text-primary"></i>Pilih nama ananda santri dari daftar pencarian yang muncul.
+            </div>
+          </div>
+
+          <!-- Card Informasi Santri Terpilih -->
+          <div id="selected-santri-box" class="p-3 bg-light rounded-3 border mb-3 d-none">
+            <div class="d-flex justify-content-between align-items-center">
+              <div>
+                <span class="badge bg-success-subtle text-success border border-success-subtle px-2 py-1 mb-1" style="font-size: 10px;">Santri Terpilih</span>
+                <h6 class="fw-bold text-dark mb-0" id="box-santri-nama">-</h6>
+                <div class="small text-muted" style="font-size: 12px;">
+                  NIS: <span id="box-santri-nis">-</span> | Kelas: <span id="box-santri-kelas">-</span> | Kamar: <span id="box-santri-kamar">-</span>
+                </div>
+              </div>
+              <button type="button" class="btn btn-sm btn-outline-secondary rounded-circle py-1 px-2" onclick="resetSelectedSantri()" title="Ganti Santri">
+                <i class="bi bi-x-lg"></i>
+              </button>
+            </div>
+          </div>
+
+          <!-- 2. DATA WALI & KONTAK -->
+          <div class="row g-2 mb-3">
+            <div class="col-md-6">
+              <label class="form-label" for="input-wali-nama">
+                <i class="bi bi-person-badge text-primary me-1"></i> Nama Wali / Pemohon <span class="text-danger">*</span>
+              </label>
+              <input type="text" class="form-control" id="input-wali-nama" placeholder="Nama lengkap Bapak/Ibu" required>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label" for="input-wali-wa">
+                <i class="bi bi-whatsapp text-success me-1"></i> No. WhatsApp Aktif <span class="text-danger">*</span>
+              </label>
+              <input type="tel" class="form-control font-monospace" id="input-wali-wa" placeholder="Contoh: 08123456789" required>
+              <div class="text-muted" style="font-size: 10.5px; margin-top: 3px;">
+                Notifikasi balasan izin akan dikirimkan ke nomor ini.
+              </div>
+            </div>
+          </div>
+
+          <!-- 3. KATEGORI & PENJEMPUT -->
+          <div class="row g-2 mb-3">
+            <div class="col-md-6">
+              <label class="form-label" for="input-kategori">
+                <i class="bi bi-tag-fill text-warning me-1"></i> Kategori Izin <span class="text-danger">*</span>
+              </label>
+              <select class="form-select" id="input-kategori" required>
+                <option value="Pulang ke Rumah" selected>Pulang ke Rumah / Menginap</option>
+                <option value="Pulang Sakit (UKS)">Pulang Sakit (Rawat di Rumah)</option>
+                <option value="Acara Keluarga / Libur">Acara Keluarga / Liburan</option>
+                <option value="Keluar Area (Non-Menginap)">Keluar Area Pondok (Sebentar/Medis)</option>
+              </select>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label" for="input-penjemput">
+                <i class="bi bi-car-front-fill text-secondary me-1"></i> Penjemput Santri
+              </label>
+              <select class="form-select" id="input-penjemput">
+                <option value="Orang Tua / Wali Sendiri" selected>Orang Tua / Wali Sendiri</option>
+                <option value="Keluarga / Saudara Mahram">Keluarga / Saudara Mahram</option>
+                <option value="Travel / Angkutan Umum">Travel / Angkutan Umum</option>
+                <option value="Pulang Mandiri">Pulang Mandiri</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- 4. WAKTU MULAI & RENCANA KEMBALI -->
+          <div class="p-3 bg-light rounded-3 border mb-3">
+            <div class="row g-3">
+              <div class="col-6">
+                <label class="form-label small mb-1">
+                  <i class="bi bi-box-arrow-right text-primary me-1"></i> Mulai Izin / Dijemput
+                </label>
+                <input type="date" class="form-control form-control-sm mb-1" id="input-tgl-mulai" required>
+                <input type="time" class="form-control form-control-sm" id="input-jam-mulai" value="09:00" required>
+              </div>
+              <div class="col-6">
+                <label class="form-label small mb-1">
+                  <i class="bi bi-box-arrow-in-left text-danger me-1"></i> Rencana Kembali
+                </label>
+                <input type="date" class="form-control form-control-sm mb-1" id="input-tgl-kembali" required>
+                <input type="time" class="form-control form-control-sm" id="input-jam-kembali" value="17:00" required>
+              </div>
+            </div>
+          </div>
+
+          <!-- 5. ALASAN & KEPERLUAN -->
+          <div class="mb-4">
+            <label class="form-label" for="input-alasan">
+              <i class="bi bi-card-text text-dark me-1"></i> Alasan & Keperluan Izin <span class="text-danger">*</span>
+            </label>
+            <textarea class="form-control" id="input-alasan" rows="3" placeholder="Jelaskan alasan izin secara terperinci (misal: acara pernikahan kakak, periksa dokter, dll)..." required></textarea>
+          </div>
+
+          <!-- SUBMIT BUTTON -->
+          <button type="submit" class="btn btn-submit" id="btn-submit-izin">
+            <i class="bi bi-send-fill me-2"></i> Kirim Permohonan Izin
+          </button>
+        </form>
+      </div>
+    </div>
+
+    <!-- ============================================== -->
+    <!-- TAB 2: CEK STATUS IZIN SANTRI -->
+    <!-- ============================================== -->
+    <div id="pane-status" class="d-none">
+      <div class="app-card">
+        <h5 class="fw-bold mb-3"><i class="bi bi-clock-history text-success me-2"></i>Cek Status Izin Santri</h5>
+        <p class="small text-muted mb-3">
+          Masukkan NIS atau nomor WhatsApp Anda untuk melihat riwayat dan status persetujuan izin ananda.
+        </p>
+
+        <div class="input-group mb-3">
+          <input type="text" class="form-control font-monospace" id="input-status-query" placeholder="Masukkan NIS Santri / No. WA..." autocomplete="off">
+          <button class="btn btn-success fw-bold px-3" type="button" onclick="cariStatusIzinSantri()">
+            <i class="bi bi-search me-1"></i> Cek Status
+          </button>
+        </div>
+
+        <div id="status-result-area">
+          <div class="text-center py-4 text-muted small">
+            <i class="bi bi-inbox fs-2 d-block mb-2 text-secondary"></i>
+            Silakan masukkan NIS atau Nomor WhatsApp untuk memuat data.
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============================================== -->
+    <!-- BUKTI SUKSES PENGAJUAN (RECEIPT MODAL / OVERLAY) -->
+    <!-- ============================================== -->
+    <div id="pane-sukses" class="d-none">
+      <div class="app-card text-center py-4">
+        <div class="rounded-circle bg-success-subtle text-success mx-auto d-flex align-items-center justify-content-center mb-3" style="width: 72px; height: 72px;">
+          <i class="bi bi-check2-circle fs-1"></i>
+        </div>
+        <h4 class="fw-bold text-success mb-1">Permohonan Berhasil Dikirim!</h4>
+        <div class="font-arabic text-muted mb-3">جَزَاكُمُ اللهُ خَيْرًا وَبَارَكَ اللهُ فِيْكُمْ</div>
+        <p class="small text-muted mb-4 px-2">
+          Permohonan izin ananda telah masuk ke sistem Pengurus Kesantrian Pondok Pesantren Imam Syafi'i Brebes dengan status:
+          <span class="badge bg-warning text-dark px-3 py-2 rounded-pill fw-bold d-block mt-2 fs-6">
+            <i class="bi bi-hourglass-split me-1"></i> Menunggu Persetujuan Pengurus
+          </span>
+        </p>
+
+        <!-- Rincian Nota Izin -->
+        <div class="bg-light rounded-3 p-3 text-start small border mb-4" id="sukses-rincian-box">
+          <!-- Diisi dinamis -->
+        </div>
+
+        <div class="d-grid gap-2">
+          <a id="btn-wa-konfirmasi-pengurus" href="#" target="_blank" class="btn btn-success fw-bold py-2 shadow-xs">
+            <i class="bi bi-whatsapp me-2"></i> Konfirmasi ke WhatsApp Pengurus
+          </a>
+          <button type="button" class="btn btn-outline-secondary py-2 fw-semibold" onclick="kembaliKeForm()">
+            <i class="bi bi-arrow-counterclockwise me-1"></i> Buat Permohonan Lain
+          </button>
+        </div>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- Bootstrap JS -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+
+  <script>
+    // URL Backend Google Apps Script Kesantrian Portal
+    const GAS_BACKEND_URL = "https://script.google.com/macros/s/AKfycbwELxlXYsX7G_o4A25hi_5bd7dsEO3wIdFJXxmIWV4393O7CiRXyA19tDEFTuYrtmQb/exec";
+    const NOMOR_PENGURUS_KESANTRIAN = "628123456789"; // Ganti dengan nomor Admin/Petugas Kesantrian
+
+    let santriCache = [];
+    let deferredPrompt = null;
+
+    // Inisialisasi Aplikasi
+    document.addEventListener('DOMContentLoaded', () => {
+      setDefaultDates();
+      loadSantriData();
+      initPwaInstall();
+    });
+
+    // PWA Service Worker Registration
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('./sw.js').then((reg) => {
+          console.log('SW Registered:', reg.scope);
+        }).catch((err) => {
+          console.log('SW Fail:', err);
+        });
+      });
+    }
+
+    // PWA Install Prompt Handler
+    function initPwaInstall() {
+      window.addEventListener('beforeinstallprompt', (e) => {
+        e.preventDefault();
+        deferredPrompt = e;
+        const box = document.getElementById('pwa-install-box');
+        if (box) box.style.display = 'flex';
+      });
+
+      window.addEventListener('appinstalled', () => {
+        const box = document.getElementById('pwa-install-box');
+        if (box) box.style.display = 'none';
+        deferredPrompt = null;
+      });
+    }
+
+    function triggerPwaInstall() {
+      if (deferredPrompt) {
+        deferredPrompt.prompt();
+        deferredPrompt.userChoice.then((choiceResult) => {
+          if (choiceResult.outcome === 'accepted') {
+            console.log('User installed PWA');
+          }
+          deferredPrompt = null;
+          const box = document.getElementById('pwa-install-box');
+          if (box) box.style.display = 'none';
+        });
+      }
+    }
+
+    // Default Dates (Hari ini & Besok / 2 Hari ke depan)
+    function setDefaultDates() {
+      const now = new Date();
+      const yyyy = now.getFullYear();
+      const mm = String(now.getMonth() + 1).padStart(2, '0');
+      const dd = String(now.getDate()).padStart(2, '0');
+      
+      const tglMulai = document.getElementById('input-tgl-mulai');
+      const tglKembali = document.getElementById('input-tgl-kembali');
+      
+      if (tglMulai) tglMulai.value = `${yyyy}-${mm}-${dd}`;
+      
+      // Default kembali besok
+      const tomorrow = new Date(now);
+      tomorrow.setDate(tomorrow.getDate() + 1);
+      const tyyyy = tomorrow.getFullYear();
+      const tmm = String(tomorrow.getMonth() + 1).padStart(2, '0');
+      const tdd = String(tomorrow.getDate()).padStart(2, '0');
+      if (tglKembali) tglKembali.value = `${tyyyy}-${tmm}-${tdd}`;
+    }
+
+    // Load Santri Cache dari Backend API
+    function loadSantriData() {
+      // Coba load dari LocalStorage dahulu
+      const saved = localStorage.getItem('maisya_santri_izin_cache');
+      if (saved) {
+        try { santriCache = JSON.parse(saved); } catch(e) {}
+      }
+
+      fetch(`${GAS_BACKEND_URL}?api=getSantriListForIzin`)
+        .then(res => res.json())
+        .then(res => {
+          if (res && res.success && Array.isArray(res.data)) {
+            santriCache = res.data;
+            localStorage.setItem('maisya_santri_izin_cache', JSON.stringify(res.data));
+          }
+        })
+        .catch(err => {
+          console.warn("Gagal sinkron data santri online:", err);
+        });
+    }
+
+    // Autocomplete Santri
+    function onSearchSantri(query) {
+      const listEl = document.getElementById('santri-suggestions');
+      const q = (query || '').toLowerCase().trim();
+      
+      if (q.length < 2) {
+        listEl.style.display = 'none';
+        listEl.innerHTML = '';
+        return;
+      }
+
+      const filtered = santriCache.filter(s => {
+        const n = (s.nama || '').toLowerCase();
+        const nis = (s.nis || '').toString().toLowerCase();
+        return n.includes(q) || nis.includes(q);
+      }).slice(0, 10);
+
+      if (filtered.length === 0) {
+        listEl.innerHTML = '<div class="p-3 text-muted small text-center">Santri tidak ditemukan. Pastikan ejaan benar.</div>';
+        listEl.style.display = 'block';
+        return;
+      }
+
+      let html = '';
+      filtered.forEach(s => {
+        const safeNama = (s.nama || '').replace(/'/g, "\\'");
+        const safeWali = (s.namaOrtu || s.namaAyah || '').replace(/'/g, "\\'");
+        const safeWa = (s.noHpWali || '').replace(/'/g, "\\'");
+        const safeKelas = (s.kelas || '').replace(/'/g, "\\'");
+        const safeKamar = (s.kamarId || '').replace(/'/g, "\\'");
+
+        html += `
+          <div class="autocomplete-item" onclick="selectSantri('${s.nis}', '${safeNama}', '${safeKelas}', '${safeKamar}', '${safeWali}', '${safeWa}')">
+            <div class="fw-bold text-dark">${s.nama}</div>
+            <div class="small text-muted" style="font-size: 11px;">
+              NIS: <strong>${s.nis}</strong> | Kelas: ${s.kelas || '-'} | Kamar: ${s.kamarId || '-'}
+            </div>
+          </div>
+        `;
+      });
+
+      listEl.innerHTML = html;
+      listEl.style.display = 'block';
+    }
+
+    function selectSantri(nis, nama, kelas, kamar, wali, wa) {
+      document.getElementById('selected-santri-nis').value = nis;
+      document.getElementById('selected-santri-nama').value = nama;
+      document.getElementById('input-santri-search').value = `${nama} (${nis})`;
+      
+      document.getElementById('box-santri-nama').innerText = nama;
+      document.getElementById('box-santri-nis').innerText = nis;
+      document.getElementById('box-santri-kelas').innerText = kelas || '-';
+      document.getElementById('box-santri-kamar').innerText = kamar || '-';
+      document.getElementById('selected-santri-box').classList.remove('d-none');
+      document.getElementById('santri-suggestions').style.display = 'none';
+
+      // Auto-fill nama wali & WA jika ada
+      const inputWali = document.getElementById('input-wali-nama');
+      const inputWa = document.getElementById('input-wali-wa');
+      if (wali && !inputWali.value) inputWali.value = wali;
+      if (wa && !inputWa.value) inputWa.value = wa;
+    }
+
+    function resetSelectedSantri() {
+      document.getElementById('selected-santri-nis').value = '';
+      document.getElementById('selected-santri-nama').value = '';
+      document.getElementById('input-santri-search').value = '';
+      document.getElementById('selected-santri-box').classList.add('d-none');
+      document.getElementById('input-santri-search').focus();
+    }
+
+    // Submit Izin Wali
+    function submitIzinWali() {
+      const nis = document.getElementById('selected-santri-nis').value;
+      const nama = document.getElementById('selected-santri-nama').value;
+      const wali = document.getElementById('input-wali-nama').value.trim();
+      const wa = document.getElementById('input-wali-wa').value.trim();
+      const kategori = document.getElementById('input-kategori').value;
+      const penjemput = document.getElementById('input-penjemput').value;
+      const tglMulai = document.getElementById('input-tgl-mulai').value;
+      const jamMulai = document.getElementById('input-jam-mulai').value;
+      const tglKembali = document.getElementById('input-tgl-kembali').value;
+      const jamKembali = document.getElementById('input-jam-kembali').value;
+      const alasan = document.getElementById('input-alasan').value.trim();
+
+      if (!nis || !nama) {
+        alert("Silakan pilih santri terlebih dahulu.");
+        document.getElementById('input-santri-search').focus();
+        return;
+      }
+      if (!wali || !wa) {
+        alert("Silakan lengkapi nama wali dan nomor WhatsApp.");
+        return;
+      }
+
+      const wMulai = `${tglMulai} ${jamMulai}:00`;
+      const wKembali = `${tglKembali} ${jamKembali}:00`;
+
+      const payload = {
+        nis: nis,
+        nama_santri: nama,
+        nama_wali: wali,
+        no_wa_wali: wa,
+        kategori: kategori,
+        penjemput: penjemput,
+        waktu_mulai: wMulai,
+        waktu_kembali: wKembali,
+        alasan: alasan
+      };
+
+      const btn = document.getElementById('btn-submit-izin');
+      const originalText = btn.innerHTML;
+      btn.disabled = true;
+      btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2" role="status"></span>Mengirim Permohonan...';
+
+      fetch(`${GAS_BACKEND_URL}?api=submitPengajuanIzinWali`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded'
+        },
+        body: 'data=' + encodeURIComponent(JSON.stringify(payload))
+      })
+      .then(res => res.json())
+      .then(res => {
+        btn.disabled = false;
+        btn.innerHTML = originalText;
+
+        if (res && res.success) {
+          tampilkanBuktiSukses(payload, res.id_izin);
+        } else {
+          alert("Gagal mengajukan izin: " + (res && res.message ? res.message : "Terjadi kesalahan server."));
+        }
+      })
+      .catch(err => {
+        btn.disabled = false;
+        btn.innerHTML = originalText;
+        console.error("Submit Error:", err);
+        // Fallback jika CORS: tampilkan info bantuan
+        alert("Permohonan sedang diproses oleh server. Silakan cek tab 'Cek Status' dalam beberapa detik.");
+      });
+    }
+
+    // Tampilkan Bukti Sukses
+    function tampilkanBuktiSukses(data, idIzin) {
+      document.getElementById('pane-ajukan').classList.add('d-none');
+      document.getElementById('pane-status').classList.add('d-none');
+      document.getElementById('pane-sukses').classList.remove('d-none');
+
+      const rincianHtml = `
+        <div class="row g-2">
+          <div class="col-6"><strong>ID Pengajuan:</strong><br><span class="font-monospace text-success fw-bold">${idIzin || '-'}</span></div>
+          <div class="col-6"><strong>Status:</strong><br><span class="badge bg-warning text-dark">Menunggu Persetujuan</span></div>
+          <div class="col-6 mt-2"><strong>Nama Santri:</strong><br>${data.nama_santri} (${data.nis})</div>
+          <div class="col-6 mt-2"><strong>Wali Pemohon:</strong><br>${data.nama_wali}</div>
+          <div class="col-6 mt-2"><strong>Kategori:</strong><br>${data.kategori}</div>
+          <div class="col-6 mt-2"><strong>Penjemput:</strong><br>${data.penjemput}</div>
+          <div class="col-12 mt-2"><strong>Waktu Mulai:</strong> ${data.waktu_mulai}</div>
+          <div class="col-12"><strong>Rencana Kembali:</strong> ${data.waktu_kembali}</div>
+          <div class="col-12 mt-2"><strong>Alasan:</strong><br>${data.alasan}</div>
+        </div>
+      `;
+      document.getElementById('sukses-rincian-box').innerHTML = rincianHtml;
+
+      // Konfigurasi Link WA Konfirmasi ke Pengurus
+      const waText = 
+        "*KONFIRMASI PERMOHONAN IZIN SANTRI*\n" +
+        "*PONDOK PESANTREN IMAM SYAFI'I BREBES*\n\n" +
+        "السَّلَامُ عَلَيْكُمْ وَرَحْمَةُ اللهِ وَبَرَكَاتُهُ\n\n" +
+        "Ustadz/Pengurus Kesantrian yang kami hormati,\n" +
+        "Saya *${data.nama_wali}* (Wali dari *${data.nama_santri}*, NIS: ${data.nis}), telah mengajukan permohonan izin pulang melalui Portal Izin Online dengan rincian:\n\n" +
+        "📌 *Kategori:* ${data.kategori}\n" +
+        "🛫 *Waktu:* ${data.waktu_mulai} s.d ${data.waktu_kembali}\n" +
+        "📝 *Alasan:* ${data.alasan}\n\n" +
+        "Mohon kiranya permohonan izin kami dapat ditinjau dan disetujui.\n\n" +
+        "جَزَاكُمُ اللهُ خَيْرًا\n" +
+        "وَالسَّلَامُ عَلَيْكُمْ وَرَحْمَةُ اللهِ وَبَرَكَاتُهُ";
+
+      const btnWa = document.getElementById('btn-wa-konfirmasi-pengurus');
+      btnWa.href = `https://api.whatsapp.com/send?phone=${NOMOR_PENGURUS_KESANTRIAN}&text=${encodeURIComponent(waText)}`;
+
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function kembaliKeForm() {
+      document.getElementById('form-pengajuan-wali').reset();
+      resetSelectedSantri();
+      setDefaultDates();
+      document.getElementById('pane-sukses').classList.add('d-none');
+      document.getElementById('pane-ajukan').classList.remove('d-none');
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    // Switch Tab
+    function switchTab(tab) {
+      const btnAjukan = document.getElementById('tab-btn-ajukan');
+      const btnStatus = document.getElementById('tab-btn-status');
+      const paneAjukan = document.getElementById('pane-ajukan');
+      const paneStatus = document.getElementById('pane-status');
+      const paneSukses = document.getElementById('pane-sukses');
+
+      paneSukses.classList.add('d-none');
+
+      if (tab === 'ajukan') {
+        btnAjukan.classList.add('active');
+        btnStatus.classList.remove('active');
+        paneAjukan.classList.remove('d-none');
+        paneStatus.classList.add('d-none');
+      } else {
+        btnStatus.classList.add('active');
+        btnAjukan.classList.remove('active');
+        paneStatus.classList.remove('d-none');
+        paneAjukan.classList.add('d-none');
+
+        // Otomatis isi jika santri sudah dipilih
+        const nis = document.getElementById('selected-santri-nis').value;
+        const wa = document.getElementById('input-wali-wa').value;
+        const queryInput = document.getElementById('input-status-query');
+        if (queryInput && !queryInput.value) {
+          queryInput.value = nis || wa || '';
+          if (queryInput.value) cariStatusIzinSantri();
+        }
+      }
+    }
+
+    // Cek Status Izin Santri
+    function cariStatusIzinSantri() {
+      const query = (document.getElementById('input-status-query').value || '').trim();
+      const resultArea = document.getElementById('status-result-area');
+      
+      if (!query) {
+        alert("Silakan masukkan NIS atau Nomor WhatsApp.");
+        return;
+      }
+
+      resultArea.innerHTML = `
+        <div class="text-center py-4 text-muted">
+          <span class="spinner-border spinner-border-sm me-2"></span>Memeriksa status perizinan...
+        </div>
+      `;
+
+      fetch(`${GAS_BACKEND_URL}?api=cekStatusIzin&query=${encodeURIComponent(query)}`)
+        .then(res => res.json())
+        .then(res => {
+          if (res && res.success && Array.isArray(res.data) && res.data.length > 0) {
+            renderStatusList(res.data);
+          } else {
+            resultArea.innerHTML = `
+              <div class="alert alert-warning py-3 text-center small mb-0 rounded-3">
+                <i class="bi bi-exclamation-circle me-1"></i>
+                Tidak ditemukan riwayat perizinan untuk data <strong>${query}</strong>. Pastikan NIS atau nomor WA sesuai.
+              </div>
+            `;
+          }
+        })
+        .catch(err => {
+          resultArea.innerHTML = `
+            <div class="alert alert-danger py-3 text-center small mb-0 rounded-3">
+              <i class="bi bi-x-circle me-1"></i> Gagal terhubung ke server. Silakan coba sesaat lagi.
+            </div>
+          `;
+        });
+    }
+
+    function renderStatusList(list) {
+      const resultArea = document.getElementById('status-result-area');
+      let html = '<div class="d-flex flex-column gap-3">';
+
+      list.forEach(p => {
+        let badgeClass = "bg-secondary text-white";
+        let statusDisplay = p.Status_Izin || "Menunggu";
+
+        if (p.Status_Izin === "Disetujui") {
+          badgeClass = "bg-success text-white";
+          statusDisplay = "Disetujui (Sedang Izin)";
+        } else if (p.Status_Izin === "Menunggu") {
+          badgeClass = "bg-warning text-dark";
+          statusDisplay = "Menunggu Persetujuan";
+        } else if (p.Status_Izin === "Ditolak") {
+          badgeClass = "bg-danger text-white";
+          statusDisplay = "Ditolak";
+        } else if (p.Status_Izin === "Kembali" || p.Status_Izin === "Selesai") {
+          badgeClass = "bg-info text-dark";
+          statusDisplay = "Telah Kembali ke Pondok";
+        }
+
+        html += `
+          <div class="p-3 bg-light rounded-3 border">
+            <div class="d-flex justify-content-between align-items-start mb-2">
+              <div>
+                <span class="badge ${badgeClass} badge-status mb-1">${statusDisplay}</span>
+                <h6 class="fw-bold text-dark mb-0">${p.Nama_Santri}</h6>
+                <small class="text-muted">NIS: ${p.NIS} | ${p.Kategori}</small>
+              </div>
+              <span class="badge bg-white text-secondary border font-monospace" style="font-size: 10px;">${p.ID_Izin}</span>
+            </div>
+
+            <div class="small text-muted mt-2 pt-2 border-top">
+              <div><i class="bi bi-box-arrow-right text-primary me-1"></i> Mulai: <strong>${p.Waktu_Mulai}</strong></div>
+              <div><i class="bi bi-box-arrow-in-left text-danger me-1"></i> Batas Kembali: <strong>${p.Waktu_Kembali}</strong></div>
+              <div class="mt-1"><i class="bi bi-chat-text text-secondary me-1"></i> Keperluan: ${p.Alasan || '-'}</div>
+              ${p.Disetujui_Oleh ? `<div class="mt-1 text-success fw-medium"><i class="bi bi-check2 me-1"></i> Diproses: ${p.Disetujui_Oleh}</div>` : ''}
+            </div>
+          </div>
+        `;
+      });
+
+      html += '</div>';
+      resultArea.innerHTML = html;
+    }
+  </script>
+</body>
+</html>

@@ -1,0 +1,36 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#064e3b" />
+      <stop offset="50%" stop-color="#047857" />
+      <stop offset="100%" stop-color="#059669" />
+    </linearGradient>
+    <linearGradient id="goldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#fde047" />
+      <stop offset="100%" stop-color="#eab308" />
+    </linearGradient>
+  </defs>
+  <!-- Background with rounded corners -->
+  <rect width="512" height="512" rx="110" fill="url(#bgGrad)" />
+  <!-- Inner Ring -->
+  <circle cx="256" cy="256" r="215" fill="none" stroke="rgba(255,255,255,0.15)" stroke-width="6" stroke-dasharray="14 10" />
+  
+  <!-- Mosque Dome Silhouette -->
+  <path d="M256,120 C235,170 190,195 190,240 L322,240 C322,195 277,170 256,120 Z" fill="url(#goldGrad)" />
+  <!-- Minaret Left -->
+  <rect x="155" y="210" width="18" height="150" rx="4" fill="#ffffff" opacity="0.9" />
+  <path d="M152,210 L164,180 L176,210 Z" fill="url(#goldGrad)" />
+  <!-- Minaret Right -->
+  <rect x="339" y="210" width="18" height="150" rx="4" fill="#ffffff" opacity="0.9" />
+  <path d="M336,210 L348,180 L360,210 Z" fill="url(#goldGrad)" />
+  <!-- Base Building -->
+  <rect x="180" y="240" width="152" height="120" rx="8" fill="#ffffff" opacity="0.95" />
+  <!-- Door Arch -->
+  <path d="M232,360 L232,295 C232,280 280,280 280,295 L280,360 Z" fill="#064e3b" />
+  <!-- Crescent Moon on Top -->
+  <path d="M262,92 A14,14 0 1,1 248,80 A11,11 0 1,0 262,92 Z" fill="url(#goldGrad)" />
+
+  <!-- Badge / Passport Icon Overlay in bottom-right -->
+  <circle cx="370" cy="370" r="62" fill="#10b981" stroke="#ffffff" stroke-width="8" />
+  <path d="M350,370 L364,384 L394,354" fill="none" stroke="#ffffff" stroke-width="7" stroke-linecap="round" stroke-linejoin="round" />
+</svg>
