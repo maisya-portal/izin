@@ -1,8 +1,9 @@
-const CACHE_NAME = 'maisya-izin-v1';
+const CACHE_NAME = 'maisya-izin-v2';
 const ASSETS = [
   './',
   './index.html',
   './manifest.json',
+  './logo.png',
   './icon.svg'
 ];
 
