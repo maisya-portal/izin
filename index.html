@@ -299,7 +299,10 @@
           <div id="selected-santri-box" class="p-3 bg-light rounded-3 border mb-3 d-none">
             <div class="d-flex justify-content-between align-items-center">
               <div>
-                <span class="badge bg-success-subtle text-success border border-success-subtle px-2 py-1 mb-1" style="font-size: 10px;">Santri Terpilih</span>
+                <div class="d-flex align-items-center gap-2 mb-1">
+                  <span class="badge bg-success-subtle text-success border border-success-subtle px-2 py-1" style="font-size: 10px;">Santri Terpilih</span>
+                  <span id="box-santri-poin-badge" class="badge bg-secondary px-2 py-1" style="font-size: 10px;">Poin: -</span>
+                </div>
                 <h6 class="fw-bold text-dark mb-0" id="box-santri-nama">-</h6>
                 <div class="small text-muted" style="font-size: 12px;">
                   NIS: <span id="box-santri-nis">-</span> | Kelas: <span id="box-santri-kelas">-</span> | Kamar: <span id="box-santri-kamar">-</span>
@@ -308,6 +311,57 @@
               <button type="button" class="btn btn-sm btn-outline-secondary rounded-circle py-1 px-2" onclick="resetSelectedSantri()" title="Ganti Santri">
                 <i class="bi bi-x-lg"></i>
               </button>
+            </div>
+          </div>
+
+          <!-- ALERT SANTRI MELEBIHI 50 POIN & RINCIAN PELANGGARAN -->
+          <div id="alert-santri-poin-bloque" class="p-3 bg-danger-subtle border border-danger rounded-3 mb-3 d-none">
+            <div class="d-flex align-items-start gap-2">
+              <i class="bi bi-shield-slash-fill text-danger fs-3 flex-shrink-0 mt-1"></i>
+              <div class="flex-grow-1">
+                <h6 class="fw-bold text-danger mb-1">Permohonan Izin Standar Ditolak</h6>
+                <p class="small text-danger-emphasis mb-2" style="font-size: 12px; line-height: 1.4;">
+                  Ananda <strong id="block-nama-santri">-</strong> saat ini memiliki akumulasi <strong id="block-poin-santri" class="badge bg-danger text-white">0 Poin</strong> pelanggaran aktif (melebihi batas toleransi 50 poin). Sesuai tata tertib kedisiplinan santri, pengajuan permohonan izin keluar/pulang pondok reguler <strong>ditutup secara otomatis oleh sistem</strong>.
+                </p>
+                
+                <!-- Tombol Lihat Detail Poin -->
+                <div class="mb-2">
+                  <button type="button" class="btn btn-sm btn-outline-danger py-1 px-3 fw-semibold rounded-pill" id="btn-toggle-detail-poin" onclick="toggleDetailPoinPelanggaran()">
+                    <i class="bi bi-list-check me-1"></i> <span id="label-btn-detail-poin">Lihat Rincian Poin Pelanggaran</span>
+                  </button>
+                </div>
+
+                <!-- Container Rincian Poin (Tabel / List) -->
+                <div id="box-detail-poin-santri" class="d-none mt-2 p-3 bg-white rounded-3 border border-danger-subtle small">
+                  <div class="d-flex justify-content-between align-items-center mb-2 pb-2 border-bottom">
+                    <span class="fw-bold text-dark" style="font-size: 12px;"><i class="bi bi-journal-text me-1 text-danger"></i>Riwayat Catatan Kedisiplinan Santri:</span>
+                    <span id="badge-total-poin-detail" class="badge bg-danger">0 Poin</span>
+                  </div>
+                  <div id="list-pelanggaran-items" style="max-height: 220px; overflow-y: auto;">
+                    <!-- Rincian diisi via JS -->
+                  </div>
+                </div>
+
+                <!-- KOTAK OPSI IZIN PAKSA (+25 POIN) -->
+                <div class="mt-3 p-3 bg-white rounded-3 border border-warning shadow-xs">
+                  <div class="d-flex align-items-center gap-2 mb-2">
+                    <i class="bi bi-exclamation-octagon-fill text-warning fs-5"></i>
+                    <h6 class="fw-bold text-dark mb-0" style="font-size: 13px;">Opsi Izin Paksa (Darurat)</h6>
+                    <span class="badge bg-warning text-dark ms-auto fw-bold" style="font-size: 10px;">+25 Poin Pelanggaran</span>
+                  </div>
+                  <p class="text-muted small mb-2" style="font-size: 11.5px; line-height: 1.45;">
+                    Apabila permohonan izin ini sangat mendesak (darurat keluarga/medis), wali santri dapat mengajukan <strong>Izin Paksa</strong> dengan konsekuensi ananda akan secara otomatis dikenakan <strong>tambahan sanksi 25 poin pelanggaran</strong> yang langsung dicatat ke sistem disiplin pondok.
+                  </p>
+                  
+                  <div class="form-check p-2 bg-warning-subtle rounded-2 border border-warning-subtle">
+                    <input class="form-check-input ms-0 me-2" type="checkbox" id="check-setuju-izin-paksa" onchange="onToggleSetujuIzinPaksa(this.checked)">
+                    <label class="form-check-label small text-dark fw-bold" for="check-setuju-izin-paksa" style="font-size: 11.5px; cursor: pointer;">
+                      Saya selaku wali santri menyetujui penambahan 25 poin pelanggaran untuk ananda demi memproses izin paksa ini.
+                    </label>
+                  </div>
+                </div>
+
+              </div>
             </div>
           </div>
 
@@ -554,6 +608,8 @@
         });
     }
 
+    let currentSelectedSantri = null;
+
     // Autocomplete Santri
     function onSearchSantri(query) {
       const listEl = document.getElementById('santri-suggestions');
@@ -572,7 +628,7 @@
       }).slice(0, 10);
 
       if (filtered.length === 0) {
-        listEl.innerHTML = '<div class="p-3 text-muted small text-center">Santri tidak ditemukan. Pastikan ejaan benar.</div>';
+        listEl.innerHTML = '<div class="p-3 text-muted small text-center">Santri tidak ditemukan. Pastikan ejaan nama atau NIS sudah sesuai.</div>';
         listEl.style.display = 'block';
         return;
       }
@@ -583,13 +639,20 @@
         const safeWali = (s.namaOrtu || s.namaAyah || '').replace(/'/g, "\\'");
         const safeWa = (s.noHpWali || '').replace(/'/g, "\\'");
         const safeKelas = (s.kelas || '').replace(/'/g, "\\'");
-        const safeKamar = (s.kamarId || '').replace(/'/g, "\\'");
+        const safeKamar = (s.kamarId || s.kamar || '').replace(/'/g, "\\'");
+        const poin = parseInt(s.poinAkhir) || 0;
+        const isLock = s.isLocked || poin > 50;
 
         html += `
-          <div class="autocomplete-item" onclick="selectSantri('${s.nis}', '${safeNama}', '${safeKelas}', '${safeKamar}', '${safeWali}', '${safeWa}')">
-            <div class="fw-bold text-dark">${s.nama}</div>
+          <div class="autocomplete-item" onclick="selectSantri('${s.nis}', '${safeNama}', '${safeKelas}', '${safeKamar}', '${safeWali}', '${safeWa}', ${poin}, ${isLock})">
+            <div class="d-flex justify-content-between align-items-center mb-1">
+              <div class="fw-bold text-dark">${s.nama}</div>
+              <span class="badge ${isLock ? 'bg-danger text-white' : 'bg-success-subtle text-success border'} px-2 py-0" style="font-size: 10px;">
+                ${poin} Poin ${isLock ? '(>50)' : ''}
+              </span>
+            </div>
             <div class="small text-muted" style="font-size: 11px;">
-              NIS: <strong>${s.nis}</strong> | Kelas: ${s.kelas || '-'} | Kamar: ${s.kamarId || '-'}
+              NIS: <strong>${s.nis}</strong> | Kelas: ${s.kelas || '-'} | Kamar: ${s.kamarId || s.kamar || '-'}
             </div>
           </div>
         `;
@@ -599,7 +662,11 @@
       listEl.style.display = 'block';
     }
 
-    function selectSantri(nis, nama, kelas, kamar, wali, wa) {
+    function selectSantri(nis, nama, kelas, kamar, wali, wa, poin, isLocked) {
+      const sPoin = parseInt(poin) || 0;
+      const sLocked = isLocked === true || sPoin > 50;
+      currentSelectedSantri = { nis, nama, kelas, kamar, wali, wa, poin: sPoin, isLocked: sLocked };
+
       document.getElementById('selected-santri-nis').value = nis;
       document.getElementById('selected-santri-nama').value = nama;
       document.getElementById('input-santri-search').value = `${nama} (${nis})`;
@@ -608,6 +675,19 @@
       document.getElementById('box-santri-nis').innerText = nis;
       document.getElementById('box-santri-kelas').innerText = kelas || '-';
       document.getElementById('box-santri-kamar').innerText = kamar || '-';
+
+      // Badge poin santri di header kartu santri
+      const poinBadge = document.getElementById('box-santri-poin-badge');
+      if (poinBadge) {
+        if (sLocked) {
+          poinBadge.className = 'badge bg-danger text-white px-2 py-1';
+          poinBadge.innerHTML = `<i class="bi bi-exclamation-triangle-fill me-1"></i>${sPoin} Poin (Melebihi Batas)`;
+        } else {
+          poinBadge.className = 'badge bg-success-subtle text-success border border-success-subtle px-2 py-1';
+          poinBadge.innerHTML = `<i class="bi bi-shield-check me-1"></i>${sPoin} Poin (Aman)`;
+        }
+      }
+
       document.getElementById('selected-santri-box').classList.remove('d-none');
       document.getElementById('santri-suggestions').style.display = 'none';
 
@@ -616,13 +696,164 @@
       const inputWa = document.getElementById('input-wali-wa');
       if (wali && !inputWali.value) inputWali.value = wali;
       if (wa && !inputWa.value) inputWa.value = wa;
+
+      // Reset opsi izin paksa
+      const chk = document.getElementById('check-setuju-izin-paksa');
+      if (chk) chk.checked = false;
+
+      const alertBloque = document.getElementById('alert-santri-poin-bloque');
+      const boxDetail = document.getElementById('box-detail-poin-santri');
+      const btn = document.getElementById('btn-submit-izin');
+      const labelDetail = document.getElementById('label-btn-detail-poin');
+
+      if (boxDetail) boxDetail.classList.add('d-none');
+      if (labelDetail) labelDetail.innerText = 'Lihat Rincian Poin Pelanggaran';
+
+      if (sLocked) {
+        if (alertBloque) {
+          document.getElementById('block-nama-santri').innerText = nama;
+          document.getElementById('block-poin-santri').innerText = `${sPoin} Poin`;
+          document.getElementById('badge-total-poin-detail').innerText = `${sPoin} Poin`;
+          alertBloque.classList.remove('d-none');
+        }
+        if (btn) {
+          btn.disabled = true;
+          btn.className = 'btn btn-secondary w-100 py-3 fw-bold';
+          btn.innerHTML = `<i class="bi bi-slash-circle me-2"></i> Pengajuan Terkunci (Poin Santri: ${sPoin} > 50)`;
+        }
+        // Panggil preload rincian poin santri
+        loadDetailPoinPelanggaran(nis);
+      } else {
+        if (alertBloque) alertBloque.classList.add('d-none');
+        if (btn) {
+          btn.disabled = false;
+          btn.className = 'btn btn-submit';
+          btn.innerHTML = '<i class="bi bi-send-fill me-2"></i> Kirim Permohonan Izin';
+        }
+      }
+    }
+
+    function onToggleSetujuIzinPaksa(checked) {
+      const btn = document.getElementById('btn-submit-izin');
+      const poin = currentSelectedSantri ? (currentSelectedSantri.poin || 0) : 0;
+      if (!btn) return;
+      if (checked) {
+        btn.disabled = false;
+        btn.className = 'btn btn-warning w-100 fw-bold py-3 text-dark shadow-sm';
+        btn.innerHTML = '<i class="bi bi-exclamation-triangle-fill me-2"></i> Kirim Permohonan Izin Paksa (+25 Poin)';
+      } else {
+        btn.disabled = true;
+        btn.className = 'btn btn-secondary w-100 py-3 fw-bold';
+        btn.innerHTML = `<i class="bi bi-slash-circle me-2"></i> Pengajuan Terkunci (Poin: ${poin} > 50)`;
+      }
+    }
+
+    function toggleDetailPoinPelanggaran() {
+      const box = document.getElementById('box-detail-poin-santri');
+      const label = document.getElementById('label-btn-detail-poin');
+      if (!box) return;
+      if (box.classList.contains('d-none')) {
+        box.classList.remove('d-none');
+        if (label) label.innerText = 'Tutup Rincian Poin';
+        const nis = document.getElementById('selected-santri-nis').value;
+        if (nis) loadDetailPoinPelanggaran(nis);
+      } else {
+        box.classList.add('d-none');
+        if (label) label.innerText = 'Lihat Rincian Poin Pelanggaran';
+      }
+    }
+
+    function loadDetailPoinPelanggaran(nis) {
+      const container = document.getElementById('list-pelanggaran-items');
+      if (!container) return;
+      container.innerHTML = '<div class="text-center py-3 text-muted"><span class="spinner-border spinner-border-sm me-2"></span>Mengambil rincian catatan pelanggaran...</div>';
+
+      fetch(`${GAS_BACKEND_URL}?api=getDetailPoinSantri&nis=${encodeURIComponent(nis)}`)
+        .then(res => res.json())
+        .then(res => {
+          if (res && res.success && res.data) {
+            renderDetailPoinPelanggaran(res.data);
+          } else {
+            container.innerHTML = '<div class="text-muted text-center py-2 small">Tidak ada rincian data pelanggaran tambahan.</div>';
+          }
+        })
+        .catch(err => {
+          container.innerHTML = '<div class="text-muted text-center py-2 small">Gagal memuat rincian secara online. Silakan cek koneksi internet.</div>';
+        });
+    }
+
+    function renderDetailPoinPelanggaran(data) {
+      const container = document.getElementById('list-pelanggaran-items');
+      if (!container) return;
+      const pelList = data.pelanggaran || [];
+      const rewList = data.reward || [];
+
+      if (pelList.length === 0) {
+        container.innerHTML = '<div class="text-muted text-center py-3 small">Belum ada riwayat pelanggaran tercatat dalam rincian.</div>';
+        return;
+      }
+
+      let html = '<div class="d-flex flex-column gap-2">';
+      pelList.forEach(p => {
+        html += `
+          <div class="p-2 bg-light rounded border-start border-3 border-danger">
+            <div class="d-flex justify-content-between align-items-start">
+              <div>
+                <strong class="text-dark d-block" style="font-size: 11.5px;">${p.jenis}</strong>
+                <span class="text-muted" style="font-size: 10.5px;"><i class="bi bi-calendar3 me-1"></i>${p.tanggal} • Dicatat: ${p.dicatatOleh || '-'}</span>
+              </div>
+              <span class="badge bg-danger" style="font-size: 10.5px;">+${p.poin} Poin</span>
+            </div>
+            ${p.keterangan && p.keterangan !== '-' ? `<div class="text-secondary mt-1" style="font-size: 10.5px; font-style: italic;">"${p.keterangan}"</div>` : ''}
+          </div>
+        `;
+      });
+
+      if (rewList.length > 0) {
+        html += '<div class="fw-bold text-success mt-2 mb-1" style="font-size: 11px;"><i class="bi bi-award me-1"></i>Poin Kebaikan / Reward (Pengurang):</div>';
+        rewList.forEach(r => {
+          html += `
+            <div class="p-2 bg-light rounded border-start border-3 border-success">
+              <div class="d-flex justify-content-between align-items-start">
+                <div>
+                  <strong class="text-success d-block" style="font-size: 11.5px;">${r.jenis}</strong>
+                  <span class="text-muted" style="font-size: 10.5px;"><i class="bi bi-calendar3 me-1"></i>${r.tanggal}</span>
+                </div>
+                <span class="badge bg-success" style="font-size: 10.5px;">-${r.poin} Poin</span>
+              </div>
+            </div>
+          `;
+        });
+      }
+
+      html += `
+        <div class="mt-2 pt-2 border-top d-flex justify-content-between align-items-center fw-bold" style="font-size: 11.5px;">
+          <span>Akumulasi Poin Bersih:</span>
+          <span class="text-danger fs-6">${data.poinAkhir} Poin</span>
+        </div>
+      </div>`;
+
+      container.innerHTML = html;
     }
 
     function resetSelectedSantri() {
+      currentSelectedSantri = null;
       document.getElementById('selected-santri-nis').value = '';
       document.getElementById('selected-santri-nama').value = '';
       document.getElementById('input-santri-search').value = '';
       document.getElementById('selected-santri-box').classList.add('d-none');
+      
+      const alertBloque = document.getElementById('alert-santri-poin-bloque');
+      if (alertBloque) alertBloque.classList.add('d-none');
+      const chk = document.getElementById('check-setuju-izin-paksa');
+      if (chk) chk.checked = false;
+
+      const btn = document.getElementById('btn-submit-izin');
+      if (btn) {
+        btn.disabled = false;
+        btn.className = 'btn btn-submit';
+        btn.innerHTML = '<i class="bi bi-send-fill me-2"></i> Kirim Permohonan Izin';
+      }
       document.getElementById('input-santri-search').focus();
     }
 
@@ -650,6 +881,28 @@
         return;
       }
 
+      // Validasi Santri Terkunci (> 50 Poin)
+      const isLocked = currentSelectedSantri ? currentSelectedSantri.isLocked : false;
+      const chkSetuju = document.getElementById('check-setuju-izin-paksa');
+      const isIzinPaksa = Boolean(isLocked && chkSetuju && chkSetuju.checked);
+
+      if (isLocked && !isIzinPaksa) {
+        alert(`Permohonan izin terkunci karena ananda memiliki ${currentSelectedSantri.poin} poin pelanggaran aktif (> 50 poin). Silakan centang persetujuan Izin Paksa (+25 Poin) jika permohonan izin bersifat darurat/mendesak.`);
+        return;
+      }
+
+      if (isIzinPaksa) {
+        const confirmPaksa = confirm(
+          "⚠️ PERINGATAN KONSEKUENSI IZIN PAKSA:\n\n" +
+          "Pengajuan izin untuk ananda " + nama + " akan secara otomatis dikenakan PENAMBAHAN 25 POIN PELANGGARAN ke buku catatan kedisiplinan pondok.\n\n" +
+          "• Poin Awal: " + currentSelectedSantri.poin + " Poin\n" +
+          "• Penambahan: +25 Poin (Sanksi Izin Paksa)\n" +
+          "• Poin Akhir: " + (currentSelectedSantri.poin + 25) + " Poin\n\n" +
+          "Apakah Bapak/Ibu wali santri menyetujui sanksi ini dan yakin ingin melanjutkan pengiriman izin?"
+        );
+        if (!confirmPaksa) return;
+      }
+
       const wMulai = `${tglMulai} ${jamMulai}:00`;
       const wKembali = `${tglKembali} ${jamKembali}:00`;
 
@@ -662,7 +915,8 @@
         penjemput: penjemput,
         waktu_mulai: wMulai,
         waktu_kembali: wKembali,
-        alasan: alasan
+        alasan: alasan,
+        isIzinPaksa: isIzinPaksa
       };
 
       const btn = document.getElementById('btn-submit-izin');
@@ -683,7 +937,7 @@
         btn.innerHTML = originalText;
 
         if (res && res.success) {
-          tampilkanBuktiSukses(payload, res.id_izin);
+          tampilkanBuktiSukses(payload, res.id_izin, res);
         } else {
           alert("Gagal mengajukan izin: " + (res && res.message ? res.message : "Terjadi kesalahan server."));
         }
@@ -692,21 +946,25 @@
         btn.disabled = false;
         btn.innerHTML = originalText;
         console.error("Submit Error:", err);
-        // Fallback jika CORS: tampilkan info bantuan
         alert("Permohonan sedang diproses oleh server. Silakan cek tab 'Cek Status' dalam beberapa detik.");
       });
     }
 
     // Tampilkan Bukti Sukses
-    function tampilkanBuktiSukses(data, idIzin) {
+    function tampilkanBuktiSukses(data, idIzin, resObj) {
       document.getElementById('pane-ajukan').classList.add('d-none');
       document.getElementById('pane-status').classList.add('d-none');
       document.getElementById('pane-sukses').classList.remove('d-none');
 
+      const isPaksa = data.isIzinPaksa === true;
+      const statusBadge = isPaksa
+        ? `<span class="badge bg-warning text-dark">Menunggu Persetujuan</span> <span class="badge bg-danger text-white ms-1">+25 Poin Izin Paksa</span>`
+        : `<span class="badge bg-warning text-dark">Menunggu Persetujuan</span>`;
+
       const rincianHtml = `
         <div class="row g-2">
           <div class="col-6"><strong>ID Pengajuan:</strong><br><span class="font-monospace text-success fw-bold">${idIzin || '-'}</span></div>
-          <div class="col-6"><strong>Status:</strong><br><span class="badge bg-warning text-dark">Menunggu Persetujuan</span></div>
+          <div class="col-6"><strong>Status:</strong><br>${statusBadge}</div>
           <div class="col-6 mt-2"><strong>Nama Santri:</strong><br>${data.nama_santri} (${data.nis})</div>
           <div class="col-6 mt-2"><strong>Wali Pemohon:</strong><br>${data.nama_wali}</div>
           <div class="col-6 mt-2"><strong>Kategori:</strong><br>${data.kategori}</div>
@@ -714,6 +972,11 @@
           <div class="col-12 mt-2"><strong>Waktu Mulai:</strong> ${data.waktu_mulai}</div>
           <div class="col-12"><strong>Rencana Kembali:</strong> ${data.waktu_kembali}</div>
           <div class="col-12 mt-2"><strong>Alasan:</strong><br>${data.alasan}</div>
+          ${isPaksa ? `
+            <div class="col-12 mt-2 p-2 bg-danger-subtle rounded border border-danger small text-danger fw-semibold">
+              <i class="bi bi-exclamation-triangle-fill me-1"></i> Izin diajukan melalui mekanisme Izin Paksa. Tambahan sanksi +25 poin pelanggaran telah otomatis dicatat ke sistem disiplin pondok.
+            </div>
+          ` : ''}
         </div>
       `;
       document.getElementById('sukses-rincian-box').innerHTML = rincianHtml;
@@ -724,11 +987,12 @@
         "*PONDOK PESANTREN IMAM SYAFI'I BREBES*\n\n" +
         "السَّلَامُ عَلَيْكُمْ وَرَحْمَةُ اللهِ وَبَرَكَاتُهُ\n\n" +
         "Ustadz/Pengurus Kesantrian yang kami hormati,\n" +
-        "Saya *${data.nama_wali}* (Wali dari *${data.nama_santri}*, NIS: ${data.nis}), telah mengajukan permohonan izin pulang melalui Portal Izin Online dengan rincian:\n\n" +
+        "Saya *${data.nama_wali}* (Wali dari *${data.nama_santri}*, NIS: ${data.nis}), telah mengajukan permohonan izin melalui Portal Izin Online dengan rincian:\n\n" +
         "📌 *Kategori:* ${data.kategori}\n" +
         "🛫 *Waktu:* ${data.waktu_mulai} s.d ${data.waktu_kembali}\n" +
-        "📝 *Alasan:* ${data.alasan}\n\n" +
-        "Mohon kiranya permohonan izin kami dapat ditinjau dan disetujui.\n\n" +
+        "📝 *Alasan:* ${data.alasan}\n" +
+        (isPaksa ? "⚠️ *Keterangan:* Menggunakan mekanisme Izin Paksa (+25 Poin Pelanggaran disetujui wali)\n" : "") +
+        "\nMohon kiranya permohonan izin kami dapat ditinjau dan disetujui.\n\n" +
         "جَزَاكُمُ اللهُ خَيْرًا\n" +
         "وَالسَّلَامُ عَلَيْكُمْ وَرَحْمَةُ اللهِ وَبَرَكَاتُهُ";
 
