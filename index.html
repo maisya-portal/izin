@@ -661,11 +661,38 @@
       });
     }
 
-    // PWA Service Worker Registration
+    // PWA Service Worker Registration with Auto-Update & Cache Invalidation
+    const APP_PWA_BUILD_VER = 'v6_20260918';
+    if (localStorage.getItem('maisya_pwa_ver') !== APP_PWA_BUILD_VER) {
+      localStorage.setItem('maisya_pwa_ver', APP_PWA_BUILD_VER);
+      if ('caches' in window) {
+        caches.keys().then((keys) => {
+          keys.forEach((k) => {
+            if (k !== 'maisya-izin-v6') caches.delete(k);
+          });
+        });
+      }
+    }
+
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
-        navigator.serviceWorker.register('./sw.js').then((reg) => {
+        navigator.serviceWorker.register('./sw.js?v=6').then((reg) => {
           console.log('SW Registered:', reg.scope);
+          reg.update();
+          if (reg.waiting) {
+            reg.waiting.postMessage({ type: 'SKIP_WAITING' });
+          }
+          reg.addEventListener('updatefound', () => {
+            const newWorker = reg.installing;
+            if (newWorker) {
+              newWorker.addEventListener('statechange', () => {
+                if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                  console.log('[PWA] Versi baru terpasang, memuat ulang halaman...');
+                  window.location.reload();
+                }
+              });
+            }
+          });
         }).catch((err) => {
           console.log('SW Fail:', err);
         });
@@ -1204,35 +1231,36 @@
       `;
       document.getElementById('sukses-rincian-box').innerHTML = rincianHtml;
 
-      const namaWaliSafe = (data.nama_wali || '').trim() || '-';
-      const namaSantriSafe = (data.nama_santri || '').trim() || '-';
-      const nisSafe = (data.nis || '').trim() || '-';
-      const kategoriSafe = (data.kategori || '').trim() || '-';
-      const mulaiSafe = (data.waktu_mulai || '').trim() || '-';
-      const kembaliSafe = (data.waktu_kembali || '').trim() || '-';
-      const alasanSafe = (data.alasan || '').trim() || '-';
+      var namaWaliSafe = (data.nama_wali || '').trim() || '-';
+      var namaSantriSafe = (data.nama_santri || '').trim() || '-';
+      var nisSafe = (data.nis || '').trim() || '-';
+      var kategoriSafe = (data.kategori || '').trim() || '-';
+      var mulaiSafe = (data.waktu_mulai || '').trim() || '-';
+      var kembaliSafe = (data.waktu_kembali || '').trim() || '-';
+      var alasanSafe = (data.alasan || '').trim() || '-';
 
       // Konfigurasi Link WA Konfirmasi ke Pengurus
-      const waText = 
-`*KONFIRMASI PERMOHONAN IZIN SANTRI*
-*PONDOK PESANTREN IMAM SYAFI'I BREBES*
+      var waText = 
+        "*KONFIRMASI PERMOHONAN IZIN SANTRI*\n" +
+        "*PONDOK PESANTREN IMAM SYAFI'I BREBES*\n\n" +
+        "السَّلَامُ عَلَيْكُمْ وَرَحْمَةُ اللهِ وَبَرَكَاتُهُ\n\n" +
+        "Ustadz / Pengurus Kesantrian yang kami hormati,\n" +
+        "Saya *" + namaWaliSafe + "* (Wali dari *" + namaSantriSafe + "*, NIS: " + nisSafe + "), telah mengajukan permohonan izin melalui Portal Izin Online dengan rincian:\n\n" +
+        "📌 *Kategori:* " + kategoriSafe + "\n" +
+        "🛫 *Waktu:* " + mulaiSafe + " s.d " + kembaliSafe + "\n" +
+        "📝 *Alasan:* " + alasanSafe + "\n" +
+        (isPaksa ? "⚠️ *Keterangan:* Menggunakan mekanisme Izin Paksa (+25 Poin Pelanggaran disetujui wali)\n" : "") +
+        "\nMohon kiranya permohonan izin kami dapat ditinjau dan disetujui.\n\n" +
+        "جَزَاكُمُ اللهُ خَيْرًا\n" +
+        "وَالسَّلَامُ عَلَيْكُمْ وَرَحْمَةُ اللهِ وَبَرَكَاتُهُ";
 
-السَّلَامُ عَلَيْكُمْ وَرَحْمَةُ اللهِ وَبَرَكَاتُهُ
-
-Ustadz / Pengurus Kesantrian yang kami hormati,
-Saya *${namaWaliSafe}* (Wali dari *${namaSantriSafe}*, NIS: ${nisSafe}), telah mengajukan permohonan izin melalui Portal Izin Online dengan rincian:
-
-📌 *Kategori:* ${kategoriSafe}
-🛫 *Waktu:* ${mulaiSafe} s.d ${kembaliSafe}
-📝 *Alasan:* ${alasanSafe}
-${isPaksa ? "⚠️ *Keterangan:* Menggunakan mekanisme Izin Paksa (+25 Poin Pelanggaran disetujui wali)\n" : ""}
-Mohon kiranya permohonan izin kami dapat ditinjau dan disetujui.
-
-جَزَاكُمُ اللهُ خَيْرًا
-وَالسَّلَامُ عَلَيْكُمْ وَرَحْمَةُ اللهِ وَبَرَكَاتُهُ`;
-
-      const btnWa = document.getElementById('btn-wa-konfirmasi-pengurus');
-      btnWa.href = `https://api.whatsapp.com/send?phone=${NOMOR_PENGURUS_KESANTRIAN}&text=${encodeURIComponent(waText)}`;
+      var btnWa = document.getElementById('btn-wa-konfirmasi-pengurus');
+      var waUrl = "https://api.whatsapp.com/send?phone=" + NOMOR_PENGURUS_KESANTRIAN + "&text=" + encodeURIComponent(waText);
+      btnWa.href = waUrl;
+      btnWa.onclick = function(e) {
+        window.open(waUrl, '_blank');
+        return false;
+      };
 
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }
