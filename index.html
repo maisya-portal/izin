@@ -314,6 +314,18 @@
             </div>
           </div>
 
+          <!-- ALERT SANTRI MEMILIKI IZIN AKTIF / MENUNGGU PERSETUJUAN (TERKUNCI) -->
+          <div id="alert-santri-active-permit" class="p-3 bg-warning-subtle border border-warning rounded-3 mb-3 d-none">
+            <div class="d-flex align-items-start gap-2">
+              <i class="bi bi-lock-fill text-warning fs-3 flex-shrink-0 mt-0.5"></i>
+              <div class="flex-grow-1">
+                <h6 class="fw-bold text-dark mb-1" id="active-permit-title">Permohonan Izin Dikunci</h6>
+                <p class="small text-secondary mb-2" id="active-permit-desc" style="font-size: 12px; line-height: 1.45;">-</p>
+                <div class="p-2 bg-white rounded-2 border border-warning-subtle small font-monospace" id="active-permit-info" style="font-size: 11px;"></div>
+              </div>
+            </div>
+          </div>
+
           <!-- ALERT SANTRI MELEBIHI 50 POIN & RINCIAN PELANGGARAN -->
           <div id="alert-santri-poin-bloque" class="p-3 bg-danger-subtle border border-danger rounded-3 mb-3 d-none">
             <div class="d-flex align-items-start gap-2">
@@ -855,6 +867,41 @@
           btn.innerHTML = '<i class="bi bi-send-fill me-2"></i> Kirim Permohonan Izin';
         }
       }
+
+      // Cek apakah santri masih memiliki izin aktif / menunggu persetujuan
+      const alertActivePermit = document.getElementById('alert-santri-active-permit');
+      if (alertActivePermit) alertActivePermit.classList.add('d-none');
+
+      callBackendApi('getDetailPoinSantri', { nis: nis })
+        .then(res => {
+          if (res && res.success && res.data) {
+            const ap = res.data.activePermit;
+            if (ap && ap.isLocked) {
+              currentSelectedSantri.activePermit = ap;
+              if (alertActivePermit) {
+                document.getElementById('active-permit-title').innerText = ap.lockType === 'PENDING' ? 'Permohonan Izin Dikunci (Menunggu Persetujuan)' : 'Permohonan Izin Dikunci (Sedang Masa Izin)';
+                document.getElementById('active-permit-desc').innerHTML = ap.lockType === 'PENDING' 
+                  ? `Ananda <strong>${nama}</strong> masih memiliki permohonan izin yang sedang <strong>menunggu persetujuan</strong> dari pihak Kesantrian. Wali santri baru dapat mengajukan izin baru setelah permohonan ini disetujui atau diproses.`
+                  : `Ananda <strong>${nama}</strong> saat ini masih dalam <strong>masa perizinan aktif (Disetujui)</strong>. Sesuai ketentuan pondok, permohonan izin baru hanya dapat diajukan setelah santri <strong>telah kembali ke pondok</strong>.`;
+                document.getElementById('active-permit-info').innerHTML = `
+                  <div><i class="bi bi-tag-fill me-1 text-warning"></i> ID Izin: <strong>${ap.id_izin}</strong> | Kategori: <strong>${ap.kategori}</strong></div>
+                  <div><i class="bi bi-calendar3 me-1 text-primary"></i> Waktu Izin: <strong>${ap.waktu_mulai}</strong> s.d <strong>${ap.waktu_kembali}</strong></div>
+                  <div><i class="bi bi-info-circle me-1 text-secondary"></i> Status: <span class="badge ${ap.lockType === 'PENDING' ? 'bg-warning text-dark' : 'bg-success text-white'}">${ap.statusLabel || ap.status}</span></div>
+                `;
+                alertActivePermit.classList.remove('d-none');
+              }
+              if (btn) {
+                btn.disabled = true;
+                btn.className = 'btn btn-secondary w-100 py-3 fw-bold';
+                btn.innerHTML = `<i class="bi bi-lock-fill me-2"></i> Pengajuan Dikunci (${ap.statusLabel || ap.status})`;
+              }
+            } else {
+              if (alertActivePermit) alertActivePermit.classList.add('d-none');
+              if (currentSelectedSantri) currentSelectedSantri.activePermit = null;
+            }
+          }
+        })
+        .catch(err => console.warn("Check active permit error:", err));
     }
 
     function onToggleSetujuIzinPaksa(checked) {
@@ -968,6 +1015,8 @@
       
       const alertBloque = document.getElementById('alert-santri-poin-bloque');
       if (alertBloque) alertBloque.classList.add('d-none');
+      const alertActivePermit = document.getElementById('alert-santri-active-permit');
+      if (alertActivePermit) alertActivePermit.classList.add('d-none');
       const chk = document.getElementById('check-setuju-izin-paksa');
       if (chk) chk.checked = false;
 
@@ -1001,6 +1050,17 @@
       }
       if (!wali || !wa) {
         alert("Silakan lengkapi nama wali dan nomor WhatsApp.");
+        return;
+      }
+
+      // Validasi Santri Terkunci: Masih Memiliki Izin Aktif / Menunggu Persetujuan
+      if (currentSelectedSantri && currentSelectedSantri.activePermit && currentSelectedSantri.activePermit.isLocked) {
+        const ap = currentSelectedSantri.activePermit;
+        if (ap.lockType === 'PENDING') {
+          alert(`Permohonan izin belum dapat diajukan:\n\nAnanda ${nama} masih memiliki permohonan izin yang sedang MENUNGGU PERSETUJUAN dari pihak Kesantrian (ID: ${ap.id_izin}, Kategori: ${ap.kategori}).\n\nSilakan tunggu hingga permohonan izin tersebut disetujui atau diproses oleh pihak pondok.`);
+        } else {
+          alert(`Permohonan izin belum dapat diajukan:\n\nAnanda ${nama} saat ini masih dalam masa PERIZINAN AKTIF (Status: Disetujui, ID: ${ap.id_izin}, Kategori: ${ap.kategori}).\n\nPermohonan izin baru hanya dapat diajukan kembali setelah santri TELAH KEMBALI ke pondok (status izin telah selesai/kembali).`);
+        }
         return;
       }
 
@@ -1250,19 +1310,31 @@
       let html = '<div class="d-flex flex-column gap-3">';
 
       list.forEach(p => {
-        let badgeClass = "bg-secondary text-white";
-        let statusDisplay = p.Status_Izin || "Menunggu";
+        let idIzin = p.ID_Izin || p.id_izin || '-';
+        let namaSantri = p.Nama_Santri || p.nama_santri || '-';
+        let nis = p.NIS || p.nis || '-';
+        let kat = p.Kategori || p.kategori || '-';
+        let rawStatus = p.Status_Izin || p.status_izin || "Menunggu";
+        let mulai = p.Waktu_Mulai || p.waktu_mulai || '-';
+        let kembali = p.Waktu_Kembali || p.waktu_kembali || '-';
+        let alasan = p.Alasan || p.alasan || '-';
+        let disetujui = p.Disetujui_Oleh || p.disetujui_oleh || '';
+        let aktual = p.Waktu_Aktual_Kembali || p.waktu_aktual || '-';
+        let telat = p.Durasi_Terlambat || p.durasi_terlambat || '-';
 
-        if (p.Status_Izin === "Disetujui") {
+        let badgeClass = "bg-secondary text-white";
+        let statusDisplay = rawStatus;
+
+        if (rawStatus === "Disetujui") {
           badgeClass = "bg-success text-white";
           statusDisplay = "Disetujui (Sedang Izin)";
-        } else if (p.Status_Izin === "Menunggu") {
+        } else if (rawStatus === "Menunggu") {
           badgeClass = "bg-warning text-dark";
           statusDisplay = "Menunggu Persetujuan";
-        } else if (p.Status_Izin === "Ditolak") {
+        } else if (rawStatus === "Ditolak") {
           badgeClass = "bg-danger text-white";
           statusDisplay = "Ditolak";
-        } else if (p.Status_Izin === "Kembali" || p.Status_Izin === "Selesai") {
+        } else if (rawStatus === "Kembali" || rawStatus === "Selesai") {
           badgeClass = "bg-info text-dark";
           statusDisplay = "Telah Kembali ke Pondok";
         }
@@ -1272,17 +1344,19 @@
             <div class="d-flex justify-content-between align-items-start mb-2">
               <div>
                 <span class="badge ${badgeClass} badge-status mb-1">${statusDisplay}</span>
-                <h6 class="fw-bold text-dark mb-0">${p.Nama_Santri}</h6>
-                <small class="text-muted">NIS: ${p.NIS} | ${p.Kategori}</small>
+                <h6 class="fw-bold text-dark mb-0">${namaSantri}</h6>
+                <small class="text-muted">NIS: ${nis} | ${kat}</small>
               </div>
-              <span class="badge bg-white text-secondary border font-monospace" style="font-size: 10px;">${p.ID_Izin}</span>
+              <span class="badge bg-white text-secondary border font-monospace" style="font-size: 10px;">${idIzin}</span>
             </div>
 
             <div class="small text-muted mt-2 pt-2 border-top">
-              <div><i class="bi bi-box-arrow-right text-primary me-1"></i> Mulai: <strong>${p.Waktu_Mulai}</strong></div>
-              <div><i class="bi bi-box-arrow-in-left text-danger me-1"></i> Batas Kembali: <strong>${p.Waktu_Kembali}</strong></div>
-              <div class="mt-1"><i class="bi bi-chat-text text-secondary me-1"></i> Keperluan: ${p.Alasan || '-'}</div>
-              ${p.Disetujui_Oleh ? `<div class="mt-1 text-success fw-medium"><i class="bi bi-check2 me-1"></i> Diproses: ${p.Disetujui_Oleh}</div>` : ''}
+              <div><i class="bi bi-box-arrow-right text-primary me-1"></i> Mulai: <strong>${mulai}</strong></div>
+              <div><i class="bi bi-box-arrow-in-left text-danger me-1"></i> Batas Kembali: <strong>${kembali}</strong></div>
+              ${aktual && aktual !== '-' ? `<div><i class="bi bi-check-circle-fill text-success me-1"></i> Aktual Kembali: <strong>${aktual}</strong></div>` : ''}
+              ${telat && telat !== '-' && telat !== 'Tepat Waktu' ? `<div class="text-danger fw-semibold"><i class="bi bi-clock-history me-1"></i> Terlambat: ${telat}</div>` : ''}
+              <div class="mt-1"><i class="bi bi-chat-text text-secondary me-1"></i> Keperluan: ${alasan}</div>
+              ${disetujui && disetujui !== '-' ? `<div class="mt-1 text-success fw-medium"><i class="bi bi-check2 me-1"></i> Diproses: ${disetujui}</div>` : ''}
             </div>
           </div>
         `;
