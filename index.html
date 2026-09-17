@@ -11,9 +11,9 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="Izin Santri">
-  <link rel="apple-touch-icon" href="https://lh3.googleusercontent.com/d/1gHUjCj4lXfwJn1Fj11O1peAVjT3Xosqh">
-  <link rel="icon" type="image/png" href="https://lh3.googleusercontent.com/d/1gHUjCj4lXfwJn1Fj11O1peAVjT3Xosqh">
-  <link rel="shortcut icon" type="image/png" href="https://lh3.googleusercontent.com/d/1gHUjCj4lXfwJn1Fj11O1peAVjT3Xosqh">
+  <link rel="apple-touch-icon" href="./logo.png">
+  <link rel="icon" type="image/png" href="./logo.png">
+  <link rel="shortcut icon" type="image/png" href="./logo.png">
 
   <!-- Bootstrap 5 & Icons -->
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -219,7 +219,7 @@
     <div class="container" style="max-width: 580px;">
       <div class="d-flex align-items-center justify-content-between mb-2">
         <div class="d-flex align-items-center gap-2">
-          <img src="https://lh3.googleusercontent.com/d/1gHUjCj4lXfwJn1Fj11O1peAVjT3Xosqh" alt="Logo Kesantrian" style="height: 48px; width: 48px; object-fit: contain; filter: drop-shadow(0 2px 5px rgba(0,0,0,0.25));" onerror="this.src='./logo.png'">
+          <img src="./logo.png" alt="Logo Kesantrian" style="height: 48px; width: 48px; object-fit: contain; filter: drop-shadow(0 2px 5px rgba(0,0,0,0.25));">
           <div>
             <div class="small fw-semibold text-warning" style="font-size: 11px; letter-spacing: 0.5px;">PORTAL KESANTRIAN</div>
             <div class="fw-bold" style="font-size: 1.05rem; line-height: 1.2;">PP Imam Syafi'i Brebes</div>
@@ -513,10 +513,112 @@
   <script>
     // URL Backend Google Apps Script Kesantrian Portal
     const GAS_BACKEND_URL = "https://script.google.com/macros/s/AKfycbwELxlXYsX7G_o4A25hi_5bd7dsEO3wIdFJXxmIWV4393O7CiRXyA19tDEFTuYrtmQb/exec";
-    const NOMOR_PENGURUS_KESANTRIAN = "628123456789"; // Ganti dengan nomor Admin/Petugas Kesantrian
+    const NOMOR_PENGURUS_KESANTRIAN = "6282119836050"; // Nomor Resmi Admin/Petugas Kesantrian ISB
 
     let santriCache = [];
     let deferredPrompt = null;
+
+    // ==========================================
+    // BACKEND API ENGINE (AKSES BEBAS TANPA AKUN GOOGLE)
+    // ==========================================
+    // Mendukung pemanggilan data via Fetch dan Fallback otomatis ke JSONP.
+    // Menjamin aplikasi perizinan selalu dapat dibuka & diakses oleh siapa saja
+    // (wali santri) tanpa perlu memiliki atau login ke akun Google.
+    function callBackendApi(apiName, params) {
+      params = params || {};
+      const urlParams = new URLSearchParams();
+      urlParams.append('api', apiName);
+      for (const key in params) {
+        if (params.hasOwnProperty(key) && params[key] !== undefined && params[key] !== null) {
+          const val = typeof params[key] === 'object' ? JSON.stringify(params[key]) : String(params[key]);
+          urlParams.append(key, val);
+        }
+      }
+      const fullUrl = `${GAS_BACKEND_URL}?${urlParams.toString()}`;
+
+      return new Promise((resolve, reject) => {
+        let isHandled = false;
+
+        // 1. Coba Fetch GET
+        fetch(fullUrl, { method: 'GET', cache: 'no-store' })
+          .then(res => {
+            if (!res.ok && res.status !== 302) throw new Error(`HTTP ${res.status}`);
+            return res.json();
+          })
+          .then(data => {
+            if (!isHandled) {
+              isHandled = true;
+              resolve(data);
+            }
+          })
+          .catch(err => {
+            console.warn(`[API] Fetch ${apiName} gagal (${err.message}). Mengaktifkan JSONP Fallback...`);
+            // 2. Fallback otomatis ke JSONP (bebas CORS & bebas login Google)
+            callJsonp(fullUrl)
+              .then(data => {
+                if (!isHandled) {
+                  isHandled = true;
+                  resolve(data);
+                }
+              })
+              .catch(jsonpErr => {
+                if (!isHandled) {
+                  isHandled = true;
+                  reject(jsonpErr);
+                }
+              });
+          });
+
+        // Timeout 8 detik: jika Fetch lambat/tergantung, picu JSONP
+        setTimeout(() => {
+          if (!isHandled) {
+            console.warn(`[API] Fetch ${apiName} lambat (>8s). Mencoba JSONP Fallback...`);
+            callJsonp(fullUrl)
+              .then(data => {
+                if (!isHandled) {
+                  isHandled = true;
+                  resolve(data);
+                }
+              })
+              .catch(() => {});
+          }
+        }, 8000);
+      });
+    }
+
+    // Engine JSONP untuk bypass pembatasan browser pihak ketiga
+    function callJsonp(url) {
+      return new Promise((resolve, reject) => {
+        const callbackName = 'cb_izin_' + Math.random().toString(36).substring(2, 9) + '_' + Date.now();
+        const script = document.createElement('script');
+
+        const cleanup = () => {
+          try { delete window[callbackName]; } catch(e) { window[callbackName] = undefined; }
+          if (script.parentNode) script.parentNode.removeChild(script);
+        };
+
+        const timer = setTimeout(() => {
+          cleanup();
+          reject(new Error("Koneksi server perizinan timeout."));
+        }, 15000);
+
+        window[callbackName] = function(data) {
+          clearTimeout(timer);
+          cleanup();
+          resolve(data);
+        };
+
+        const sep = url.includes('?') ? '&' : '?';
+        script.src = `${url}${sep}callback=${callbackName}`;
+        script.onerror = function() {
+          clearTimeout(timer);
+          cleanup();
+          reject(new Error("Gagal terhubung ke server pondok."));
+        };
+
+        document.head.appendChild(script);
+      });
+    }
 
     // Inisialisasi Aplikasi
     document.addEventListener('DOMContentLoaded', () => {
@@ -587,16 +689,16 @@
       if (tglKembali) tglKembali.value = `${tyyyy}-${tmm}-${tdd}`;
     }
 
-    // Load Santri Cache dari Backend API
+    // Load Santri Cache dari Backend API (Bebas Akun Google)
     function loadSantriData() {
-      // Coba load dari LocalStorage dahulu
+      // 1. Coba load dari LocalStorage dahulu agar antarmuka responsif seketika
       const saved = localStorage.getItem('maisya_santri_izin_cache');
       if (saved) {
         try { santriCache = JSON.parse(saved); } catch(e) {}
       }
 
-      fetch(`${GAS_BACKEND_URL}?api=getSantriListForIzin`)
-        .then(res => res.json())
+      // 2. Tarik master santri terbaru dari backend via engine bebas login
+      callBackendApi('getSantriListForIzin')
         .then(res => {
           if (res && res.success && Array.isArray(res.data)) {
             santriCache = res.data;
@@ -604,7 +706,7 @@
           }
         })
         .catch(err => {
-          console.warn("Gagal sinkron data santri online:", err);
+          console.warn("Gagal sinkron data santri online, menggunakan cache lokal:", err);
         });
     }
 
@@ -768,8 +870,7 @@
       if (!container) return;
       container.innerHTML = '<div class="text-center py-3 text-muted"><span class="spinner-border spinner-border-sm me-2"></span>Mengambil rincian catatan pelanggaran...</div>';
 
-      fetch(`${GAS_BACKEND_URL}?api=getDetailPoinSantri&nis=${encodeURIComponent(nis)}`)
-        .then(res => res.json())
+      callBackendApi('getDetailPoinSantri', { nis: nis })
         .then(res => {
           if (res && res.success && res.data) {
             renderDetailPoinPelanggaran(res.data);
@@ -778,7 +879,7 @@
           }
         })
         .catch(err => {
-          container.innerHTML = '<div class="text-muted text-center py-2 small">Gagal memuat rincian secara online. Silakan cek koneksi internet.</div>';
+          container.innerHTML = '<div class="text-muted text-center py-2 small">Gagal memuat rincian online. Data poin tetap tercatat aman di buku disiplin pondok.</div>';
         });
     }
 
@@ -924,15 +1025,12 @@
       btn.disabled = true;
       btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2" role="status"></span>Mengirim Permohonan...';
 
-      fetch(`${GAS_BACKEND_URL}?api=submitPengajuanIzinWali`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/x-www-form-urlencoded'
-        },
-        body: 'data=' + encodeURIComponent(JSON.stringify(payload))
-      })
-      .then(res => res.json())
-      .then(res => {
+      const payloadStr = JSON.stringify(payload);
+      let isDone = false;
+
+      const handleSuccess = (res) => {
+        if (isDone) return;
+        isDone = true;
         btn.disabled = false;
         btn.innerHTML = originalText;
 
@@ -941,13 +1039,56 @@
         } else {
           alert("Gagal mengajukan izin: " + (res && res.message ? res.message : "Terjadi kesalahan server."));
         }
+      };
+
+      const handleFallback = (reason) => {
+        if (isDone) return;
+        console.warn("[Submit] Mengaktifkan jalur fallback bebas akun Google...", reason);
+        callBackendApi('submitPengajuanIzinWali', {
+          data: payloadStr,
+          nis: payload.nis,
+          nama_santri: payload.nama_santri,
+          nama_wali: payload.nama_wali,
+          no_wa_wali: payload.no_wa_wali,
+          kategori: payload.kategori,
+          penjemput: payload.penjemput,
+          waktu_mulai: payload.waktu_mulai,
+          waktu_kembali: payload.waktu_kembali,
+          alasan: payload.alasan,
+          isIzinPaksa: payload.isIzinPaksa ? 'true' : 'false'
+        })
+        .then(res => handleSuccess(res))
+        .catch(err => {
+          if (isDone) return;
+          isDone = true;
+          btn.disabled = false;
+          btn.innerHTML = originalText;
+          console.error("Submit Fallback Error:", err);
+          alert("Gagal mengirim permohonan ke server. Silakan periksa koneksi internet Anda atau hubungi pengurus kesantrian.");
+        });
+      };
+
+      // 1. Coba via POST fetch
+      fetch(`${GAS_BACKEND_URL}?api=submitPengajuanIzinWali`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded'
+        },
+        body: 'data=' + encodeURIComponent(payloadStr)
       })
+      .then(res => {
+        if (!res.ok && res.status !== 302) throw new Error(`HTTP ${res.status}`);
+        return res.json();
+      })
+      .then(res => handleSuccess(res))
       .catch(err => {
-        btn.disabled = false;
-        btn.innerHTML = originalText;
-        console.error("Submit Error:", err);
-        alert("Permohonan sedang diproses oleh server. Silakan cek tab 'Cek Status' dalam beberapa detik.");
+        handleFallback(err);
       });
+
+      // Timeout safety: jika POST menggantung lebih dari 7 detik, picu fallback
+      setTimeout(() => {
+        if (!isDone) handleFallback("Timeout 7s");
+      }, 7000);
     }
 
     // Tampilkan Bukti Sukses
@@ -1059,8 +1200,7 @@
         </div>
       `;
 
-      fetch(`${GAS_BACKEND_URL}?api=cekStatusIzin&query=${encodeURIComponent(query)}`)
-        .then(res => res.json())
+      callBackendApi('cekStatusIzin', { query: query, nis: query, wa: query })
         .then(res => {
           if (res && res.success && Array.isArray(res.data) && res.data.length > 0) {
             renderStatusList(res.data);
@@ -1074,9 +1214,10 @@
           }
         })
         .catch(err => {
+          console.error("Cek Status Error:", err);
           resultArea.innerHTML = `
             <div class="alert alert-danger py-3 text-center small mb-0 rounded-3">
-              <i class="bi bi-x-circle me-1"></i> Gagal terhubung ke server. Silakan coba sesaat lagi.
+              <i class="bi bi-x-circle me-1"></i> Gagal terhubung ke server perizinan. Silakan coba sesaat lagi.
             </div>
           `;
         });
