@@ -394,7 +394,9 @@
                 <option value="Pulang ke Rumah" selected>Pulang ke Rumah / Menginap</option>
                 <option value="Pulang Sakit (UKS)">Pulang Sakit (Rawat di Rumah)</option>
                 <option value="Acara Keluarga / Libur">Acara Keluarga / Liburan</option>
+                <option value="Pulang Kajian / Tabligh Akbar">Pulang Kajian / Tabligh Akbar</option>
                 <option value="Keluar Area (Non-Menginap)">Keluar Area Pondok (Sebentar/Medis)</option>
+                <option value="Lainnya">Lainnya</option>
               </select>
             </div>
             <div class="col-md-6">
@@ -625,7 +627,27 @@
       setDefaultDates();
       loadSantriData();
       initPwaInstall();
+      initKategoriHandler();
     });
+
+    function initKategoriHandler() {
+      const selectKat = document.getElementById('input-kategori');
+      const inputAlasan = document.getElementById('input-alasan');
+      if (!selectKat || !inputAlasan) return;
+      
+      selectKat.addEventListener('change', function() {
+        const val = this.value;
+        if (val === 'Pulang Kajian / Tabligh Akbar') {
+          inputAlasan.placeholder = "Sebutkan nama kajian/tabligh akbar, ustadz pemateri, tempat & waktu kajian...";
+        } else if (val === 'Lainnya') {
+          inputAlasan.placeholder = "Sebutkan dan jelaskan secara terperinci keperluan izin lainnya...";
+        } else if (val === 'Pulang Sakit (UKS)') {
+          inputAlasan.placeholder = "Jelaskan keluhan sakit ananda dan rujukan pengobatan medis di rumah...";
+        } else {
+          inputAlasan.placeholder = "Jelaskan alasan izin secara terperinci (misal: acara pernikahan kakak, periksa dokter, dll)...";
+        }
+      });
+    }
 
     // PWA Service Worker Registration
     if ('serviceWorker' in navigator) {
