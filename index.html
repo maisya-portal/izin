@@ -1204,20 +1204,32 @@
       `;
       document.getElementById('sukses-rincian-box').innerHTML = rincianHtml;
 
+      const namaWaliSafe = (data.nama_wali || '').trim() || '-';
+      const namaSantriSafe = (data.nama_santri || '').trim() || '-';
+      const nisSafe = (data.nis || '').trim() || '-';
+      const kategoriSafe = (data.kategori || '').trim() || '-';
+      const mulaiSafe = (data.waktu_mulai || '').trim() || '-';
+      const kembaliSafe = (data.waktu_kembali || '').trim() || '-';
+      const alasanSafe = (data.alasan || '').trim() || '-';
+
       // Konfigurasi Link WA Konfirmasi ke Pengurus
       const waText = 
-        "*KONFIRMASI PERMOHONAN IZIN SANTRI*\n" +
-        "*PONDOK PESANTREN IMAM SYAFI'I BREBES*\n\n" +
-        "السَّلَامُ عَلَيْكُمْ وَرَحْمَةُ اللهِ وَبَرَكَاتُهُ\n\n" +
-        "Ustadz/Pengurus Kesantrian yang kami hormati,\n" +
-        "Saya *${data.nama_wali}* (Wali dari *${data.nama_santri}*, NIS: ${data.nis}), telah mengajukan permohonan izin melalui Portal Izin Online dengan rincian:\n\n" +
-        "📌 *Kategori:* ${data.kategori}\n" +
-        "🛫 *Waktu:* ${data.waktu_mulai} s.d ${data.waktu_kembali}\n" +
-        "📝 *Alasan:* ${data.alasan}\n" +
-        (isPaksa ? "⚠️ *Keterangan:* Menggunakan mekanisme Izin Paksa (+25 Poin Pelanggaran disetujui wali)\n" : "") +
-        "\nMohon kiranya permohonan izin kami dapat ditinjau dan disetujui.\n\n" +
-        "جَزَاكُمُ اللهُ خَيْرًا\n" +
-        "وَالسَّلَامُ عَلَيْكُمْ وَرَحْمَةُ اللهِ وَبَرَكَاتُهُ";
+`*KONFIRMASI PERMOHONAN IZIN SANTRI*
+*PONDOK PESANTREN IMAM SYAFI'I BREBES*
+
+السَّلَامُ عَلَيْكُمْ وَرَحْمَةُ اللهِ وَبَرَكَاتُهُ
+
+Ustadz / Pengurus Kesantrian yang kami hormati,
+Saya *${namaWaliSafe}* (Wali dari *${namaSantriSafe}*, NIS: ${nisSafe}), telah mengajukan permohonan izin melalui Portal Izin Online dengan rincian:
+
+📌 *Kategori:* ${kategoriSafe}
+🛫 *Waktu:* ${mulaiSafe} s.d ${kembaliSafe}
+📝 *Alasan:* ${alasanSafe}
+${isPaksa ? "⚠️ *Keterangan:* Menggunakan mekanisme Izin Paksa (+25 Poin Pelanggaran disetujui wali)\n" : ""}
+Mohon kiranya permohonan izin kami dapat ditinjau dan disetujui.
+
+جَزَاكُمُ اللهُ خَيْرًا
+وَالسَّلَامُ عَلَيْكُمْ وَرَحْمَةُ اللهِ وَبَرَكَاتُهُ`;
 
       const btnWa = document.getElementById('btn-wa-konfirmasi-pengurus');
       btnWa.href = `https://api.whatsapp.com/send?phone=${NOMOR_PENGURUS_KESANTRIAN}&text=${encodeURIComponent(waText)}`;
