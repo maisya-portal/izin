@@ -508,7 +508,7 @@
           <!-- Diisi dinamis -->
         </div>
 
-        <div class="d-grid gap-2">
+        <div class="d-grid gap-2" id="sukses-action-buttons">
           <a id="btn-wa-konfirmasi-pengurus" href="#" target="_blank" class="btn btn-success fw-bold py-2 shadow-xs">
             <i class="bi bi-whatsapp me-2"></i> Konfirmasi ke WhatsApp Pengurus
           </a>
@@ -662,13 +662,13 @@
     }
 
     // PWA Service Worker Registration with Auto-Update & Cache Invalidation
-    const APP_PWA_BUILD_VER = 'v6_20260918';
+    const APP_PWA_BUILD_VER = 'v7_20260918';
     if (localStorage.getItem('maisya_pwa_ver') !== APP_PWA_BUILD_VER) {
       localStorage.setItem('maisya_pwa_ver', APP_PWA_BUILD_VER);
       if ('caches' in window) {
         caches.keys().then((keys) => {
           keys.forEach((k) => {
-            if (k !== 'maisya-izin-v6') caches.delete(k);
+            if (k !== 'maisya-izin-v7') caches.delete(k);
           });
         });
       }
@@ -676,7 +676,7 @@
 
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
-        navigator.serviceWorker.register('./sw.js?v=6').then((reg) => {
+        navigator.serviceWorker.register('./sw.js?v=7').then((reg) => {
           console.log('SW Registered:', reg.scope);
           reg.update();
           if (reg.waiting) {
@@ -704,38 +704,31 @@
       window.addEventListener('beforeinstallprompt', (e) => {
         e.preventDefault();
         deferredPrompt = e;
-        const box = document.getElementById('pwa-install-box');
-        if (box) box.style.display = 'flex';
-      });
-
-      window.addEventListener('appinstalled', () => {
-        const box = document.getElementById('pwa-install-box');
-        if (box) box.style.display = 'none';
-        deferredPrompt = null;
+        const btn = document.getElementById('btn-pwa-install');
+        if (btn) btn.classList.remove('d-none');
       });
     }
 
     function triggerPwaInstall() {
-      if (deferredPrompt) {
-        deferredPrompt.prompt();
-        deferredPrompt.userChoice.then((choiceResult) => {
-          if (choiceResult.outcome === 'accepted') {
-            console.log('User installed PWA');
-          }
-          deferredPrompt = null;
-          const box = document.getElementById('pwa-install-box');
-          if (box) box.style.display = 'none';
-        });
-      }
+      if (!deferredPrompt) return;
+      deferredPrompt.prompt();
+      deferredPrompt.userChoice.then((choiceResult) => {
+        if (choiceResult.outcome === 'accepted') {
+          console.log('User accepted PWA install');
+        }
+        deferredPrompt = null;
+        const btn = document.getElementById('btn-pwa-install');
+        if (btn) btn.classList.add('d-none');
+      });
     }
 
-    // Default Dates (Hari ini & Besok / 2 Hari ke depan)
+    // Inisialisasi Tanggal Default
     function setDefaultDates() {
       const now = new Date();
       const yyyy = now.getFullYear();
       const mm = String(now.getMonth() + 1).padStart(2, '0');
       const dd = String(now.getDate()).padStart(2, '0');
-      
+
       const tglMulai = document.getElementById('input-tgl-mulai');
       const tglKembali = document.getElementById('input-tgl-kembali');
       
@@ -750,20 +743,28 @@
       if (tglKembali) tglKembali.value = `${tyyyy}-${tmm}-${tdd}`;
     }
 
-    // Load Santri Cache dari Backend API (Bebas Akun Google)
+    // Load Santri Cache & Pengaturan dari Backend API (Bebas Akun Google)
     function loadSantriData() {
       // 1. Coba load dari LocalStorage dahulu agar antarmuka responsif seketika
       const saved = localStorage.getItem('maisya_santri_izin_cache');
       if (saved) {
         try { santriCache = JSON.parse(saved); } catch(e) {}
       }
+      const savedSettings = localStorage.getItem('maisya_izin_settings_cache');
+      if (savedSettings) {
+        try { window.izinSettingsCache = JSON.parse(savedSettings); } catch(e) {}
+      }
 
-      // 2. Tarik master santri terbaru dari backend via engine bebas login
+      // 2. Tarik master santri & settings terbaru dari backend via engine bebas login
       callBackendApi('getSantriListForIzin')
         .then(res => {
           if (res && res.success && Array.isArray(res.data)) {
             santriCache = res.data;
             localStorage.setItem('maisya_santri_izin_cache', JSON.stringify(res.data));
+          }
+          if (res && res.settings) {
+            window.izinSettingsCache = res.settings;
+            localStorage.setItem('maisya_izin_settings_cache', JSON.stringify(res.settings));
           }
         })
         .catch(err => {
@@ -1239,12 +1240,48 @@
       var kembaliSafe = (data.waktu_kembali || '').trim() || '-';
       var alasanSafe = (data.alasan || '').trim() || '-';
 
-      // Konfigurasi Link WA Konfirmasi ke Pengurus
-      var waText = 
+      // Temukan data santri & musyrif dari cache / response
+      var sTarget = null;
+      if (Array.isArray(santriCache)) {
+        sTarget = santriCache.find(function(s) {
+          return (s.nis && String(s.nis).trim() === String(nisSafe).trim()) ||
+                 (s.id && String(s.id).trim() === String(nisSafe).trim());
+        });
+      }
+
+      var musyrifNama = (resObj && resObj.musyrif_nama) || (sTarget && sTarget.musyrifNama) || '';
+      var musyrifPhone = (resObj && resObj.musyrif_phone) || (sTarget && sTarget.musyrifPhone) || '';
+      var kamarNama = (resObj && resObj.kamar_nama) || (sTarget && (sTarget.kamarNama || sTarget.kamar)) || '';
+      if (kamarNama === '-' || kamarNama === 'Belum Ada Kamar') kamarNama = '';
+
+      var activeSettings = (resObj && resObj.settings) || window.izinSettingsCache || {};
+      var targetMode = (activeSettings.tujuanWA || 'musyrif').toLowerCase();
+      var noWaAdmin = activeSettings.noWaAdmin || NOMOR_PENGURUS_KESANTRIAN;
+      var namaAdmin = activeSettings.namaAdmin || 'Pengurus Kesantrian ISB';
+
+      // Format Teks WA Konfirmasi ke Musyrif
+      var sapaanMusyrif = musyrifNama ? ("Ustadz *" + musyrifNama + "* yang kami hormati,") : "Ustadz / Musyrif Kamar yang kami hormati,";
+      var ketKamarMusyrif = kamarNama ? ("\n(Musyrif Kamar: " + kamarNama + ")") : "";
+      var waTextMusyrif = 
         "*KONFIRMASI PERMOHONAN IZIN SANTRI*\n" +
         "*PONDOK PESANTREN IMAM SYAFI'I BREBES*\n\n" +
         "السَّلَامُ عَلَيْكُمْ وَرَحْمَةُ اللهِ وَبَرَكَاتُهُ\n\n" +
-        "Ustadz / Pengurus Kesantrian yang kami hormati,\n" +
+        sapaanMusyrif + ketKamarMusyrif + "\n" +
+        "Saya *" + namaWaliSafe + "* (Wali dari *" + namaSantriSafe + "*, NIS: " + nisSafe + "), telah mengajukan permohonan izin ananda melalui Portal Izin Online dengan rincian:\n\n" +
+        "📌 *Kategori:* " + kategoriSafe + "\n" +
+        "🛫 *Waktu:* " + mulaiSafe + " s.d " + kembaliSafe + "\n" +
+        "📝 *Alasan:* " + alasanSafe + "\n" +
+        (isPaksa ? "⚠️ *Keterangan:* Menggunakan mekanisme Izin Paksa (+25 Poin Pelanggaran disetujui wali)\n" : "") +
+        "\nMohon kiranya permohonan izin ananda dapat ditinjau dan disetujui.\n\n" +
+        "جَزَاكُمُ اللهُ خَيْرًا\n" +
+        "وَالسَّلَامُ عَلَيْكُمْ وَرَحْمَةُ اللهِ وَبَرَكَاتُهُ";
+
+      // Format Teks WA Konfirmasi ke Admin Kesantrian
+      var waTextAdmin = 
+        "*KONFIRMASI PERMOHONAN IZIN SANTRI*\n" +
+        "*PONDOK PESANTREN IMAM SYAFI'I BREBES*\n\n" +
+        "السَّلَامُ عَلَيْكُمْ وَرَحْمَةُ اللهِ وَبَرَكَATُهُ\n\n" +
+        "Ustadz / " + namaAdmin + " yang kami hormati,\n" +
         "Saya *" + namaWaliSafe + "* (Wali dari *" + namaSantriSafe + "*, NIS: " + nisSafe + "), telah mengajukan permohonan izin melalui Portal Izin Online dengan rincian:\n\n" +
         "📌 *Kategori:* " + kategoriSafe + "\n" +
         "🛫 *Waktu:* " + mulaiSafe + " s.d " + kembaliSafe + "\n" +
@@ -1254,13 +1291,70 @@
         "جَزَاكُمُ اللهُ خَيْرًا\n" +
         "وَالسَّلَامُ عَلَيْكُمْ وَرَحْمَةُ اللهِ وَبَرَكَاتُهُ";
 
-      var btnWa = document.getElementById('btn-wa-konfirmasi-pengurus');
-      var waUrl = "https://api.whatsapp.com/send?phone=" + NOMOR_PENGURUS_KESANTRIAN + "&text=" + encodeURIComponent(waText);
-      btnWa.href = waUrl;
-      btnWa.onclick = function(e) {
-        window.open(waUrl, '_blank');
-        return false;
-      };
+      var actionContainer = document.getElementById('sukses-action-buttons');
+      var waUrlMusyrif = musyrifPhone ? ("https://api.whatsapp.com/send?phone=" + musyrifPhone + "&text=" + encodeURIComponent(waTextMusyrif)) : "";
+      var waUrlAdmin = "https://api.whatsapp.com/send?phone=" + noWaAdmin + "&text=" + encodeURIComponent(waTextAdmin);
+
+      var btnHtml = '';
+
+      if (targetMode === 'admin') {
+        // Mode 1: Selalu ke Admin
+        btnHtml = `
+          <a href="${waUrlAdmin}" target="_blank" class="btn btn-success fw-bold py-2 shadow-xs d-flex align-items-center justify-content-center">
+            <i class="bi bi-whatsapp me-2 fs-5"></i> Konfirmasi ke WhatsApp Pengurus
+          </a>
+        `;
+      } else if (targetMode === 'pilihan') {
+        // Mode 2: Tampilkan Pilihan Keduanya (Musyrif & Admin)
+        if (musyrifPhone) {
+          btnHtml = `
+            <a href="${waUrlMusyrif}" target="_blank" class="btn btn-success fw-bold py-2 shadow-xs d-flex align-items-center justify-content-center">
+              <i class="bi bi-whatsapp me-2 fs-5"></i> Konfirmasi ke Musyrif (${musyrifNama || 'Kamar'})
+            </a>
+            <a href="${waUrlAdmin}" target="_blank" class="btn btn-outline-success fw-semibold py-2 shadow-xs d-flex align-items-center justify-content-center">
+              <i class="bi bi-whatsapp me-2 fs-5"></i> Konfirmasi ke Admin Kesantrian
+            </a>
+          `;
+        } else {
+          btnHtml = `
+            <a href="${waUrlAdmin}" target="_blank" class="btn btn-success fw-bold py-2 shadow-xs d-flex align-items-center justify-content-center">
+              <i class="bi bi-whatsapp me-2 fs-5"></i> Konfirmasi ke WhatsApp Pengurus
+            </a>
+            <small class="text-muted text-center d-block"><i class="bi bi-info-circle me-1"></i> Kontak Musyrif belum terdata, diarahkan ke Pengurus Kesantrian.</small>
+          `;
+        }
+      } else {
+        // Mode 3 (Default): Otomatis ke Musyrif Kamar (dengan fallback ke Admin jika belum ada musyrif)
+        if (musyrifPhone) {
+          btnHtml = `
+            <a href="${waUrlMusyrif}" target="_blank" class="btn btn-success fw-bold py-2 shadow-xs d-flex align-items-center justify-content-center">
+              <i class="bi bi-whatsapp me-2 fs-5"></i> Konfirmasi ke Musyrif (${musyrifNama || 'Kamar'})
+            </a>
+            <div class="text-center mt-1">
+              <a href="${waUrlAdmin}" target="_blank" class="text-muted small text-decoration-none" style="font-size: 12px;">
+                <i class="bi bi-shield-check me-1 text-secondary"></i> Atau konfirmasi ke Admin Kesantrian
+              </a>
+            </div>
+          `;
+        } else {
+          btnHtml = `
+            <a href="${waUrlAdmin}" target="_blank" class="btn btn-success fw-bold py-2 shadow-xs d-flex align-items-center justify-content-center">
+              <i class="bi bi-whatsapp me-2 fs-5"></i> Konfirmasi ke WhatsApp Pengurus
+            </a>
+            <small class="text-muted text-center d-block"><i class="bi bi-info-circle me-1"></i> Kontak Musyrif kamar belum terdaftar, dialihkan otomatis ke Admin Kesantrian.</small>
+          `;
+        }
+      }
+
+      btnHtml += `
+        <button type="button" class="btn btn-outline-secondary py-2 fw-semibold mt-1" onclick="kembaliKeForm()">
+          <i class="bi bi-arrow-counterclockwise me-1"></i> Buat Permohonan Lain
+        </button>
+      `;
+
+      if (actionContainer) {
+        actionContainer.innerHTML = btnHtml;
+      }
 
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }

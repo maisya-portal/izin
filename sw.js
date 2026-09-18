@@ -1,4 +1,4 @@
-const CACHE_NAME = 'maisya-izin-v6';
+const CACHE_NAME = 'maisya-izin-v7';
 const ASSETS = [
   './',
   './index.html',
