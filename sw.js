@@ -1,8 +1,9 @@
-const CACHE_NAME = 'maisya-izin-v7';
+const CACHE_NAME = 'maisya-izin-v8';
 const ASSETS = [
   './',
   './index.html',
   './manifest.json',
+  './santri.json',
   './logo.png',
   './icon.svg'
 ];
@@ -38,8 +39,8 @@ self.addEventListener('activate', (e) => {
 });
 
 self.addEventListener('fetch', (e) => {
-  // Hanya proses GET request dan abaikan endpoint eksternal
-  if (e.request.method !== 'GET' || e.request.url.includes('script.google.com') || e.request.url.includes('api.qrserver.com') || e.request.url.includes('api.whatsapp.com')) {
+  // Hanya proses GET request untuk origin lokal (jangan pernah cegat GAS, Google, WA, QR API)
+  if (e.request.method !== 'GET' || !e.request.url.startsWith(self.location.origin)) {
     return;
   }
   
@@ -62,7 +63,7 @@ self.addEventListener('fetch', (e) => {
     return;
   }
 
-  // STRATEGI 2: STALE-WHILE-REVALIDATE untuk aset lokal lainnya (logo, icon, manifest)
+  // STRATEGI 2: STALE-WHILE-REVALIDATE untuk aset lokal lainnya (logo, icon, manifest, santri.json)
   e.respondWith(
     caches.match(e.request).then((cached) => {
       const fetchPromise = fetch(e.request).then((networkResponse) => {
