@@ -321,12 +321,41 @@
 
           <!-- ALERT SANTRI MEMILIKI IZIN AKTIF / MENUNGGU PERSETUJUAN (TERKUNCI) -->
           <div id="alert-santri-active-permit" class="p-3 bg-warning-subtle border border-warning rounded-3 mb-3 d-none">
-            <div class="d-flex align-items-start gap-2">
-              <i class="bi bi-lock-fill text-warning fs-3 flex-shrink-0 mt-0.5"></i>
-              <div class="flex-grow-1">
-                <h6 class="fw-bold text-dark mb-1" id="active-permit-title">Permohonan Izin Dikunci</h6>
-                <p class="small text-secondary mb-2" id="active-permit-desc" style="font-size: 12px; line-height: 1.45;">-</p>
-                <div class="p-2 bg-white rounded-2 border border-warning-subtle small font-monospace" id="active-permit-info" style="font-size: 11px;"></div>
+            <div class="d-flex align-items-center justify-content-between mb-2">
+              <span id="active-permit-badge" class="badge bg-warning text-dark px-2 py-1 fw-bold" style="font-size: 11px;">
+                <i class="bi bi-hourglass-split me-1"></i> Menunggu Persetujuan
+              </span>
+              <span class="text-muted small" style="font-size: 11px;"><i class="bi bi-shield-lock-fill text-warning me-1"></i>Formulir Terkunci (1 Kali Pengajuan)</span>
+            </div>
+            
+            <h6 class="fw-bold text-dark mb-1" id="active-permit-title">Permohonan Izin Sedang Berjalan</h6>
+            <p class="small text-secondary mb-3" id="active-permit-desc" style="font-size: 12px; line-height: 1.45;">
+              Santri hanya dapat mengajukan izin 1 kali saja. Riwayat izin yang sedang aktif/belum diproses ditampilkan di bawah ini.
+            </p>
+
+            <!-- Card Riwayat Detail Izin -->
+            <div class="bg-white p-3 rounded-3 border border-warning-subtle shadow-xs mb-3">
+              <div class="d-flex justify-content-between align-items-center pb-2 mb-2 border-bottom">
+                <span class="fw-bold text-dark small"><i class="bi bi-file-earmark-text text-primary me-1"></i>Riwayat Pengajuan Terakhir:</span>
+                <span id="active-permit-id" class="badge bg-light text-primary border font-monospace px-2 py-1">-</span>
+              </div>
+              <div id="active-permit-details" class="small">
+                <!-- Diisi via JS -->
+              </div>
+            </div>
+
+            <!-- Tombol Aksi Riwayat -->
+            <div class="d-grid gap-2">
+              <a id="btn-active-permit-wa" href="#" target="_blank" class="btn btn-sm btn-success fw-bold py-2 shadow-xs text-center">
+                <i class="bi bi-whatsapp me-1"></i> Hubungi Pengurus Kesantrian via WhatsApp
+              </a>
+              <div class="d-flex gap-2">
+                <button type="button" class="btn btn-sm btn-outline-primary flex-fill fw-semibold py-1.5" id="btn-active-permit-cek" onclick="cekStatusActivePermit()">
+                  <i class="bi bi-search me-1"></i> Cek Status Lengkap
+                </button>
+                <button type="button" class="btn btn-sm btn-outline-secondary flex-fill fw-semibold py-1.5" onclick="resetSelectedSantri()">
+                  <i class="bi bi-arrow-repeat me-1"></i> Pilih Santri Lain
+                </button>
               </div>
             </div>
           </div>
@@ -382,85 +411,88 @@
             </div>
           </div>
 
-          <!-- 2. DATA WALI & KONTAK -->
-          <div class="row g-2 mb-3">
-            <div class="col-md-6">
-              <label class="form-label" for="input-wali-nama">
-                <i class="bi bi-person-badge text-primary me-1"></i> Nama Wali / Pemohon <span class="text-danger">*</span>
-              </label>
-              <input type="text" class="form-control" id="input-wali-nama" placeholder="Nama lengkap Bapak/Ibu" required>
-            </div>
-            <div class="col-md-6">
-              <label class="form-label" for="input-wali-wa">
-                <i class="bi bi-whatsapp text-success me-1"></i> No. WhatsApp Aktif <span class="text-danger">*</span>
-              </label>
-              <input type="tel" class="form-control font-monospace" id="input-wali-wa" placeholder="Contoh: 08123456789" required>
-              <div class="text-muted" style="font-size: 10.5px; margin-top: 3px;">
-                Notifikasi balasan izin akan dikirimkan ke nomor ini.
-              </div>
-            </div>
-          </div>
-
-          <!-- 3. KATEGORI & PENJEMPUT -->
-          <div class="row g-2 mb-3">
-            <div class="col-md-6">
-              <label class="form-label" for="input-kategori">
-                <i class="bi bi-tag-fill text-warning me-1"></i> Kategori Izin <span class="text-danger">*</span>
-              </label>
-              <select class="form-select" id="input-kategori" required>
-                <option value="Pulang ke Rumah" selected>Pulang ke Rumah / Menginap</option>
-                <option value="Pulang Sakit (UKS)">Pulang Sakit (Rawat di Rumah)</option>
-                <option value="Acara Keluarga / Libur">Acara Keluarga / Liburan</option>
-                <option value="Pulang Kajian / Tabligh Akbar">Pulang Kajian / Tabligh Akbar</option>
-                <option value="Keluar Area (Non-Menginap)">Keluar Area Pondok (Sebentar/Medis)</option>
-                <option value="Lainnya">Lainnya</option>
-              </select>
-            </div>
-            <div class="col-md-6">
-              <label class="form-label" for="input-penjemput">
-                <i class="bi bi-car-front-fill text-secondary me-1"></i> Penjemput Santri
-              </label>
-              <select class="form-select" id="input-penjemput">
-                <option value="Orang Tua / Wali Sendiri" selected>Orang Tua / Wali Sendiri</option>
-                <option value="Keluarga / Saudara Mahram">Keluarga / Saudara Mahram</option>
-                <option value="Travel / Angkutan Umum">Travel / Angkutan Umum</option>
-                <option value="Pulang Mandiri">Pulang Mandiri</option>
-              </select>
-            </div>
-          </div>
-
-          <!-- 4. WAKTU MULAI & RENCANA KEMBALI -->
-          <div class="p-3 bg-light rounded-3 border mb-3">
-            <div class="row g-3">
-              <div class="col-6">
-                <label class="form-label small mb-1">
-                  <i class="bi bi-box-arrow-right text-primary me-1"></i> Mulai Izin / Dijemput
+          <!-- FORM INPUTS CONTAINER (Dapat disembunyikan jika izin aktif/terkunci) -->
+          <div id="section-form-inputs">
+            <!-- 2. DATA WALI & KONTAK -->
+            <div class="row g-2 mb-3">
+              <div class="col-md-6">
+                <label class="form-label" for="input-wali-nama">
+                  <i class="bi bi-person-badge text-primary me-1"></i> Nama Wali / Pemohon <span class="text-danger">*</span>
                 </label>
-                <input type="date" class="form-control form-control-sm mb-1" id="input-tgl-mulai" required>
-                <input type="time" class="form-control form-control-sm" id="input-jam-mulai" value="09:00" required>
+                <input type="text" class="form-control" id="input-wali-nama" placeholder="Nama lengkap Bapak/Ibu" required>
               </div>
-              <div class="col-6">
-                <label class="form-label small mb-1">
-                  <i class="bi bi-box-arrow-in-left text-danger me-1"></i> Rencana Kembali
+              <div class="col-md-6">
+                <label class="form-label" for="input-wali-wa">
+                  <i class="bi bi-whatsapp text-success me-1"></i> No. WhatsApp Aktif <span class="text-danger">*</span>
                 </label>
-                <input type="date" class="form-control form-control-sm mb-1" id="input-tgl-kembali" required>
-                <input type="time" class="form-control form-control-sm" id="input-jam-kembali" value="17:00" required>
+                <input type="tel" class="form-control font-monospace" id="input-wali-wa" placeholder="Contoh: 08123456789" required>
+                <div class="text-muted" style="font-size: 10.5px; margin-top: 3px;">
+                  Notifikasi balasan izin akan dikirimkan ke nomor ini.
+                </div>
               </div>
             </div>
-          </div>
 
-          <!-- 5. ALASAN & KEPERLUAN -->
-          <div class="mb-4">
-            <label class="form-label" for="input-alasan">
-              <i class="bi bi-card-text text-dark me-1"></i> Alasan & Keperluan Izin <span class="text-danger">*</span>
-            </label>
-            <textarea class="form-control" id="input-alasan" rows="3" placeholder="Jelaskan alasan izin secara terperinci (misal: acara pernikahan kakak, periksa dokter, dll)..." required></textarea>
-          </div>
+            <!-- 3. KATEGORI & PENJEMPUT -->
+            <div class="row g-2 mb-3">
+              <div class="col-md-6">
+                <label class="form-label" for="input-kategori">
+                  <i class="bi bi-tag-fill text-warning me-1"></i> Kategori Izin <span class="text-danger">*</span>
+                </label>
+                <select class="form-select" id="input-kategori" required>
+                  <option value="Pulang ke Rumah" selected>Pulang ke Rumah / Menginap</option>
+                  <option value="Pulang Sakit (UKS)">Pulang Sakit (Rawat di Rumah)</option>
+                  <option value="Acara Keluarga / Libur">Acara Keluarga / Liburan</option>
+                  <option value="Pulang Kajian / Tabligh Akbar">Pulang Kajian / Tabligh Akbar</option>
+                  <option value="Keluar Area (Non-Menginap)">Keluar Area Pondok (Sebentar/Medis)</option>
+                  <option value="Lainnya">Lainnya</option>
+                </select>
+              </div>
+              <div class="col-md-6">
+                <label class="form-label" for="input-penjemput">
+                  <i class="bi bi-car-front-fill text-secondary me-1"></i> Penjemput Santri
+                </label>
+                <select class="form-select" id="input-penjemput">
+                  <option value="Orang Tua / Wali Sendiri" selected>Orang Tua / Wali Sendiri</option>
+                  <option value="Keluarga / Saudara Mahram">Keluarga / Saudara Mahram</option>
+                  <option value="Travel / Angkutan Umum">Travel / Angkutan Umum</option>
+                  <option value="Pulang Mandiri">Pulang Mandiri</option>
+                </select>
+              </div>
+            </div>
 
-          <!-- SUBMIT BUTTON -->
-          <button type="submit" class="btn btn-submit" id="btn-submit-izin">
-            <i class="bi bi-send-fill me-2"></i> Kirim Permohonan Izin
-          </button>
+            <!-- 4. WAKTU MULAI & RENCANA KEMBALI -->
+            <div class="p-3 bg-light rounded-3 border mb-3">
+              <div class="row g-3">
+                <div class="col-6">
+                  <label class="form-label small mb-1">
+                    <i class="bi bi-box-arrow-right text-primary me-1"></i> Mulai Izin / Dijemput
+                  </label>
+                  <input type="date" class="form-control form-control-sm mb-1" id="input-tgl-mulai" required>
+                  <input type="time" class="form-control form-control-sm" id="input-jam-mulai" value="09:00" required>
+                </div>
+                <div class="col-6">
+                  <label class="form-label small mb-1">
+                    <i class="bi bi-box-arrow-in-left text-danger me-1"></i> Rencana Kembali
+                  </label>
+                  <input type="date" class="form-control form-control-sm mb-1" id="input-tgl-kembali" required>
+                  <input type="time" class="form-control form-control-sm" id="input-jam-kembali" value="17:00" required>
+                </div>
+              </div>
+            </div>
+
+            <!-- 5. ALASAN & KEPERLUAN -->
+            <div class="mb-4">
+              <label class="form-label" for="input-alasan">
+                <i class="bi bi-card-text text-dark me-1"></i> Alasan & Keperluan Izin <span class="text-danger">*</span>
+              </label>
+              <textarea class="form-control" id="input-alasan" rows="3" placeholder="Jelaskan alasan izin secara terperinci (misal: acara pernikahan kakak, periksa dokter, dll)..." required></textarea>
+            </div>
+
+            <!-- SUBMIT BUTTON -->
+            <button type="submit" class="btn btn-submit" id="btn-submit-izin">
+              <i class="bi bi-send-fill me-2"></i> Kirim Permohonan Izin
+            </button>
+          </div>
         </form>
       </div>
     </div>
@@ -1046,6 +1078,8 @@
       // Cek apakah santri masih memiliki izin aktif / menunggu persetujuan
       const alertActivePermit = document.getElementById('alert-santri-active-permit');
       if (alertActivePermit) alertActivePermit.classList.add('d-none');
+      const formSection = document.getElementById('section-form-inputs');
+      if (formSection) formSection.classList.remove('d-none');
 
       // Terapkan izin aktif dari cache jika ada
       if (s.activePermit && s.activePermit.isLocked) {
@@ -1063,6 +1097,7 @@
             } else {
               if (alertActivePermit) alertActivePermit.classList.add('d-none');
               if (currentSelectedSantri) currentSelectedSantri.activePermit = null;
+              if (formSection) formSection.classList.remove('d-none');
               if (!sLocked && btn) {
                 btn.disabled = false;
                 btn.className = 'btn btn-submit';
@@ -1076,23 +1111,114 @@
 
     function applyActivePermitUI(ap, nama) {
       const alertActivePermit = document.getElementById('alert-santri-active-permit');
-      const btn = document.getElementById('btn-submit-izin');
+      const formSection = document.getElementById('section-form-inputs');
+      const nis = (currentSelectedSantri && currentSelectedSantri.nis) || document.getElementById('selected-santri-nis').value || '';
+
+      if (formSection) formSection.classList.add('d-none');
+
       if (alertActivePermit) {
-        document.getElementById('active-permit-title').innerText = ap.lockType === 'PENDING' ? 'Permohonan Izin Dikunci (Menunggu Persetujuan)' : 'Permohonan Izin Dikunci (Sedang Masa Izin)';
-        document.getElementById('active-permit-desc').innerHTML = ap.lockType === 'PENDING' 
-          ? `Ananda <strong>${nama}</strong> masih memiliki permohonan izin yang sedang <strong>menunggu persetujuan</strong> dari pihak Kesantrian. Wali santri baru dapat mengajukan izin baru setelah permohonan ini disetujui atau diproses.`
-          : `Ananda <strong>${nama}</strong> saat ini masih dalam <strong>masa perizinan aktif (Disetujui)</strong>. Sesuai ketentuan pondok, permohonan izin baru hanya dapat diajukan setelah santri <strong>telah kembali ke pondok</strong>.`;
-        document.getElementById('active-permit-info').innerHTML = `
-          <div><i class="bi bi-tag-fill me-1 text-warning"></i> ID Izin: <strong>${ap.id_izin}</strong> | Kategori: <strong>${ap.kategori}</strong></div>
-          <div><i class="bi bi-calendar3 me-1 text-primary"></i> Waktu Izin: <strong>${ap.waktu_mulai}</strong> s.d <strong>${ap.waktu_kembali}</strong></div>
-          <div><i class="bi bi-info-circle me-1 text-secondary"></i> Status: <span class="badge ${ap.lockType === 'PENDING' ? 'bg-warning text-dark' : 'bg-success text-white'}">${ap.statusLabel || ap.status}</span></div>
-        `;
+        const isPending = (ap.lockType === 'PENDING');
+        const badgeEl = document.getElementById('active-permit-badge');
+        const titleEl = document.getElementById('active-permit-title');
+        const descEl = document.getElementById('active-permit-desc');
+        const idEl = document.getElementById('active-permit-id');
+        const detailsEl = document.getElementById('active-permit-details');
+        const btnWa = document.getElementById('btn-active-permit-wa');
+
+        if (badgeEl) {
+          badgeEl.className = isPending 
+            ? 'badge bg-warning text-dark px-2 py-1 fw-bold' 
+            : 'badge bg-primary text-white px-2 py-1 fw-bold';
+          badgeEl.innerHTML = isPending 
+            ? '<i class="bi bi-hourglass-split me-1"></i> Menunggu Persetujuan Kesantrian' 
+            : '<i class="bi bi-check-circle-fill me-1"></i> Sedang Masa Izin (Disetujui)';
+        }
+
+        if (titleEl) {
+          titleEl.innerText = isPending 
+            ? 'Pengajuan Izin Sedang Diproses' 
+            : 'Santri Sedang Masa Izin Aktif';
+        }
+
+        if (descEl) {
+          descEl.innerHTML = isPending
+            ? `Ananda <strong>${escapeHtml(nama)}</strong> sudah memiliki 1 berkas permohonan izin yang sedang <strong>menunggu persetujuan</strong> pihak Kesantrian. Sesuai ketentuan, permohonan izin hanya dapat diajukan <strong>1 kali</strong> agar tidak terjadi duplikasi data.`
+            : `Ananda <strong>${escapeHtml(nama)}</strong> saat ini masih dalam <strong>masa perizinan aktif</strong> di luar pondok. Permohonan izin berikutnya baru dapat diajukan kembali setelah santri <strong>telah kembali ke pondok</strong>.`;
+        }
+
+        if (idEl) {
+          idEl.innerText = ap.id_izin || '-';
+        }
+
+        if (detailsEl) {
+          detailsEl.innerHTML = `
+            <div class="row g-2">
+              <div class="col-6">
+                <span class="text-muted d-block" style="font-size: 11px;">Kategori:</span>
+                <strong class="text-dark">${escapeHtml(ap.kategori || '-')}</strong>
+              </div>
+              <div class="col-6">
+                <span class="text-muted d-block" style="font-size: 11px;">Status:</span>
+                <span class="badge ${isPending ? 'bg-warning-subtle text-dark border border-warning' : 'bg-primary-subtle text-primary border border-primary'} fw-bold" style="font-size: 11px;">
+                  ${escapeHtml(ap.statusLabel || ap.status || (isPending ? 'Menunggu' : 'Disetujui'))}
+                </span>
+              </div>
+              <div class="col-12 mt-2 pt-1 border-top">
+                <span class="text-muted d-block" style="font-size: 11px;">Waktu Izin:</span>
+                <span class="text-dark fw-semibold"><i class="bi bi-calendar-event text-primary me-1"></i>${escapeHtml(ap.waktu_mulai || '-')} <span class="text-muted mx-1">s.d</span> <i class="bi bi-calendar-check text-danger me-1"></i>${escapeHtml(ap.waktu_kembali || '-')}</span>
+              </div>
+              ${ap.penjemput ? `
+                <div class="col-6 mt-1">
+                  <span class="text-muted d-block" style="font-size: 11px;">Penjemput:</span>
+                  <span class="text-dark">${escapeHtml(ap.penjemput)}</span>
+                </div>
+              ` : ''}
+              ${ap.nama_wali ? `
+                <div class="col-6 mt-1">
+                  <span class="text-muted d-block" style="font-size: 11px;">Wali Pemohon:</span>
+                  <span class="text-dark">${escapeHtml(ap.nama_wali)} ${ap.no_wa_wali ? `<span class="text-muted">(${escapeHtml(ap.no_wa_wali)})</span>` : ''}</span>
+                </div>
+              ` : ''}
+              <div class="col-12 mt-2 pt-1 border-top">
+                <span class="text-muted d-block" style="font-size: 11px;">Keperluan / Alasan:</span>
+                <div class="p-2 bg-light rounded text-secondary" style="font-size: 11.5px; line-height: 1.4;">
+                  "${escapeHtml(ap.alasan || 'Tidak ada keterangan tambahan')}"
+                </div>
+              </div>
+            </div>
+          `;
+        }
+
+        if (btnWa) {
+          const waText = encodeURIComponent(
+            `*KONFIRMASI PERIZINAN SANTRI*\n` +
+            `*PONDOK PESANTREN IMAM SYAFI'I BREBES*\n\n` +
+            `السَّلَامُ عَلَيْكُمْ وَرَحْمَةُ اللهِ وَبَرَكَاتُهُ\n\n` +
+            `Ustadz / Pengurus Kesantrian yang kami hormati,\n` +
+            `Saya wali dari santri:\n` +
+            `• Nama: *${nama}*\n` +
+            `• NIS: *${nis}*\n\n` +
+            `Terkait permohonan izin ananda:\n` +
+            `• ID Izin: *${ap.id_izin || '-'}*\n` +
+            `• Kategori: *${ap.kategori || '-'}*\n` +
+            `• Waktu: *${ap.waktu_mulai || '-'}* s.d *${ap.waktu_kembali || '-'}*\n` +
+            `• Status: *${ap.statusLabel || ap.status || (isPending ? 'Menunggu Persetujuan' : 'Disetujui')}*\n\n` +
+            `Mohon informasi atau bantuannya terkait permohonan tersebut. Terima kasih.`
+          );
+          btnWa.href = `https://wa.me/6282119836050?text=${waText}`;
+        }
+
         alertActivePermit.classList.remove('d-none');
       }
-      if (btn) {
-        btn.disabled = true;
-        btn.className = 'btn btn-secondary w-100 py-3 fw-bold';
-        btn.innerHTML = `<i class="bi bi-lock-fill me-2"></i> Pengajuan Dikunci (${ap.statusLabel || ap.status})`;
+    }
+
+    function cekStatusActivePermit() {
+      const nis = (currentSelectedSantri && currentSelectedSantri.nis) || document.getElementById('selected-santri-nis').value;
+      switchTab('status');
+      const queryInput = document.getElementById('input-status-query');
+      if (queryInput && nis) {
+        queryInput.value = nis;
+        cariStatusIzinSantri();
       }
     }
 
@@ -1209,6 +1335,8 @@
       if (alertBloque) alertBloque.classList.add('d-none');
       const alertActivePermit = document.getElementById('alert-santri-active-permit');
       if (alertActivePermit) alertActivePermit.classList.add('d-none');
+      const formSection = document.getElementById('section-form-inputs');
+      if (formSection) formSection.classList.remove('d-none');
       const chk = document.getElementById('check-setuju-izin-paksa');
       if (chk) chk.checked = false;
 
@@ -1317,6 +1445,10 @@
 
         if (res && res.success) {
           tampilkanBuktiSukses(payload, res.id_izin, res);
+        } else if (res && res.isPermitLocked && res.activePermit) {
+          if (currentSelectedSantri) currentSelectedSantri.activePermit = res.activePermit;
+          applyActivePermitUI(res.activePermit, payload.nama_santri);
+          alert(res.message || "Ananda masih memiliki permohonan izin yang sedang diproses atau aktif.");
         } else {
           alert("Gagal mengajukan izin: " + (res && res.message ? res.message : "Terjadi kesalahan server."));
         }
