@@ -1223,6 +1223,11 @@
 
     // Submit Izin Wali
     function submitIzinWali() {
+      if (window._isIzinSubmitting) {
+        console.warn("[Submit] Permohonan izin sedang dalam proses pengiriman...");
+        return;
+      }
+
       const nis = document.getElementById('selected-santri-nis').value;
       const nama = document.getElementById('selected-santri-nama').value;
       const wali = document.getElementById('input-wali-nama').value.trim();
@@ -1269,14 +1274,14 @@
       if (isIzinPaksa) {
         const confirmPaksa = confirm(
           "⚠️ PERINGATAN KONSEKUENSI IZIN PAKSA:\n\n" +
-          "Pengajuan izin untuk ananda " + nama + " akan secara otomatis dikenakan PENAMBAHAN 25 POIN PELANGGARAN ke buku catatan kedisiplinan pondok.\n\n" +
-          "• Poin Awal: " + currentSelectedSantri.poin + " Poin\n" +
-          "• Penambahan: +25 Poin (Sanksi Izin Paksa)\n" +
-          "• Poin Akhir: " + (currentSelectedSantri.poin + 25) + " Poin\n\n" +
-          "Apakah Bapak/Ibu wali santri menyetujui sanksi ini dan yakin ingin melanjutkan pengiriman izin?"
+          "Pengajuan izin untuk ananda " + nama + " diajukan melalui mekanisme Izin Paksa.\n\n" +
+          "• Poin Awal: " + currentSelectedSantri.poin + " Poin\n\n" +
+          "Apakah Bapak/Ibu wali santri yakin ingin melanjutkan pengiriman izin?"
         );
         if (!confirmPaksa) return;
       }
+
+      window._isIzinSubmitting = true;
 
       const wMulai = `${tglMulai} ${jamMulai}:00`;
       const wKembali = `${tglKembali} ${jamKembali}:00`;
@@ -1291,7 +1296,8 @@
         waktu_mulai: wMulai,
         waktu_kembali: wKembali,
         alasan: alasan,
-        isIzinPaksa: isIzinPaksa
+        isIzinPaksa: isIzinPaksa,
+        client_req_time: Date.now()
       };
 
       const btn = document.getElementById('btn-submit-izin');
@@ -1305,6 +1311,7 @@
       const handleSuccess = (res) => {
         if (isDone) return;
         isDone = true;
+        window._isIzinSubmitting = false;
         btn.disabled = false;
         btn.innerHTML = originalText;
 
@@ -1335,6 +1342,7 @@
         .catch(err => {
           if (isDone) return;
           isDone = true;
+          window._isIzinSubmitting = false;
           btn.disabled = false;
           btn.innerHTML = originalText;
           console.error("Submit Fallback Error:", err);
@@ -1342,27 +1350,33 @@
         });
       };
 
-      // 1. Coba via POST fetch
+      // 1. Coba via POST fetch dengan AbortController timeout 25 detik
+      const abortCtrl = new AbortController();
+      const timeoutId = setTimeout(() => {
+        abortCtrl.abort();
+      }, 25000);
+
       fetch(`${GAS_BACKEND_URL}?api=submitPengajuanIzinWali`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/x-www-form-urlencoded'
         },
-        body: 'data=' + encodeURIComponent(payloadStr)
+        body: 'data=' + encodeURIComponent(payloadStr),
+        signal: abortCtrl.signal
       })
       .then(res => {
+        clearTimeout(timeoutId);
         if (!res.ok && res.status !== 302) throw new Error(`HTTP ${res.status}`);
         return res.json();
       })
       .then(res => handleSuccess(res))
       .catch(err => {
-        handleFallback(err);
+        clearTimeout(timeoutId);
+        // HANYA jika POST benar-benar gagal atau timeout 25s, jalankan fallback sekuensial
+        if (!isDone) {
+          handleFallback(err.name === 'AbortError' ? 'Timeout 25s' : err.message);
+        }
       });
-
-      // Timeout safety: jika POST menggantung lebih dari 7 detik, picu fallback
-      setTimeout(() => {
-        if (!isDone) handleFallback("Timeout 7s");
-      }, 7000);
     }
 
     // Tampilkan Bukti Sukses
